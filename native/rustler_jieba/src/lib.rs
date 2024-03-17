@@ -43,9 +43,10 @@ fn io_error_to_term(err: &IoError) -> Atom {
 }
 
 #[rustler::nif]
-fn make() -> ResourceArc<JiebaResource> {
+fn make(use_default: bool) -> ResourceArc<JiebaResource> {
+    let jieba = if use_default { Jieba::new() } else { Jieba::empty() };
     ResourceArc::new(JiebaResource {
-        jieba: Mutex::new(Jieba::new()),
+        jieba: Mutex::new(jieba),
     })
 }
 
@@ -68,9 +69,9 @@ fn load_dict(env: Env, resource: ResourceArc<JiebaResource>, dict_path: String) 
 }
 
 #[rustler::nif]
-fn split(resource: ResourceArc<JiebaResource>, text: String) -> Vec<String> {
+fn cut(resource: ResourceArc<JiebaResource>, text: String) -> Vec<String> {
     let ref jieba= *resource.jieba.lock().unwrap();
     jieba.cut(&text, true).into_iter().map(|s| s.to_string()).collect()
 }
 
-rustler::init!("Elixir.Jieba", [make, load_dict, split], load = on_load);
+rustler::init!("Elixir.Jieba", [make, load_dict, cut], load = on_load);
