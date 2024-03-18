@@ -26,5 +26,6 @@ jieba-*.tar
 /tmp/
 
 *~
+*.sw[op]
 
 /priv

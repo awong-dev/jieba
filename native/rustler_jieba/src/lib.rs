@@ -43,10 +43,16 @@ fn io_error_to_term(err: &IoError) -> Atom {
 }
 
 #[rustler::nif]
-fn make(use_default: bool) -> ResourceArc<JiebaResource> {
-    let jieba = if use_default { Jieba::new() } else { Jieba::empty() };
+fn new() -> ResourceArc<JiebaResource> {
     ResourceArc::new(JiebaResource {
-        jieba: Mutex::new(jieba),
+        jieba: Mutex::new(Jieba::new()),
+    })
+}
+
+#[rustler::nif]
+fn empty() -> ResourceArc<JiebaResource> {
+    ResourceArc::new(JiebaResource {
+        jieba: Mutex::new(Jieba::empty()),
     })
 }
 
@@ -74,4 +80,4 @@ fn cut(resource: ResourceArc<JiebaResource>, text: String) -> Vec<String> {
     jieba.cut(&text, true).into_iter().map(|s| s.to_string()).collect()
 }
 
-rustler::init!("Elixir.Jieba", [make, load_dict, cut], load = on_load);
+rustler::init!("Elixir.RustJieba", [new, empty, load_dict, cut], load = on_load);

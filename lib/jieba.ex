@@ -24,25 +24,27 @@ defmodule Jieba do
        "方面", "的", "家"]
   """
 
-  use Rustler,
-    otp_app: :jieba, # must match the name of the project in `mix.exs`
-    crate: :rustler_jieba # must match the name of the crate in `native/jieba/Cargo.toml`
+  @enforce_keys [:use_default, :dict_paths, :rust_jieba]
+  defstruct [:use_default, :dict_paths, :rust_jieba]
 
   @doc """
   Creates an initializes new Jieba instance.
   """
   def new(options \\ [{:dict_paths, []}, {:use_default, true}]) do
-    jieba = make(options[:use_default] != false)
+    use_default = options[:use_default] != false
+    rust_jieba = if use_default, do: RustJieba.new(), else: RustJieba.empty()
 
     for path <- (options[:dict_paths] || []) do
-      load_dict(jieba, path)
+      RustJieba.load_dict(rust_jieba, path)
     end
-    jieba
+
+    %Jieba{use_default: use_default, dict_paths: options[:dict_paths], rust_jieba: rust_jieba}
   end
 
-  def cut(_jieba, _text), do: :erlang.nif_error(:nif_not_loaded)
-
-  defp make(_use_default), do: :erlang.nif_error(:nif_not_loaded)
-  def load_dict(_jieba, _dict_path), do: :erlang.nif_error(:nif_not_loaded)
-
+  @doc """
+  Takes `text` and returns an array of the segments.
+  """
+  def cut(jieba, text) do
+    RustJieba.cut(jieba.rust_jieba, text)
+  end
 end
