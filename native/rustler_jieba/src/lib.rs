@@ -1,5 +1,5 @@
-use jieba_rs::{Jieba, Error as JiebaError};
-use rustler::{Atom, Env, Error as RustlerError, ResourceArc, Term};
+use jieba_rs::{Jieba, TokenizeMode, Error as JiebaError};
+use rustler::{Atom, Env, Error as RustlerError, NifStruct, ResourceArc, Term};
 use std::fs::File;
 use std::io::BufReader;
 use std::sync::Mutex;
@@ -24,6 +24,20 @@ mod atoms {
 
 pub struct JiebaResource {
     jieba: Mutex<Jieba>,
+}
+
+#[derive(NifStruct)]
+#[module = "RustJieba.Token"]
+struct JiebaToken {
+    pub word: String,
+    pub start: usize,
+}
+
+#[derive(NifStruct)]
+#[module = "RustJieba.Tag"]
+struct JiebaTag {
+    pub word: String,
+    pub tag: String,
 }
 
 fn on_load(env: Env, _term: Term) -> bool {
@@ -97,9 +111,9 @@ fn suggest_freq(resource: ResourceArc<JiebaResource>, segment: String) -> usize 
 }
 
 #[rustler::nif]
-fn add_word(resource: ResourceArc<JiebaResource>, word: String, freq: Option<usize>, tag: Option<&str>) -> usize {
+fn add_word(resource: ResourceArc<JiebaResource>, word: String, freq: Option<usize>, new_tag: Option<&str>) -> usize {
     let ref mut jieba= *resource.jieba.lock().unwrap();
-    jieba.add_word(&word, freq, tag)
+    jieba.add_word(&word, freq, new_tag)
 }
 
 #[rustler::nif]
@@ -120,7 +134,28 @@ fn cut_for_search(resource: ResourceArc<JiebaResource>, sentence: String, hmm: b
     jieba.cut_for_search(&sentence, hmm).into_iter().map(|s| s.to_string()).collect()
 }
 
+#[rustler::nif]
+fn tokenize(resource: ResourceArc<JiebaResource>, sentence: String, mode: String, hmm: bool) -> Vec<JiebaToken> {
+    let ref jieba= *resource.jieba.lock().unwrap();
+    jieba.tokenize(&sentence,
+                   if mode == "search" { TokenizeMode::Search } else { TokenizeMode::Default },
+                   hmm)
+        .into_iter()
+        .map(|t| JiebaToken{ word: t.word.to_string(), start: t.start } )
+        .collect()
+}
+
+#[rustler::nif]
+fn tag(resource: ResourceArc<JiebaResource>, sentence: String, hmm: bool) -> Vec<JiebaTag> {
+    let ref jieba= *resource.jieba.lock().unwrap();
+    jieba.tag(&sentence, hmm)
+        .into_iter()
+        .map(|t| JiebaTag{ word: t.word.to_string(), tag: t.tag.to_string() })
+        .collect()
+}
+
 rustler::init!(
     "Elixir.RustJieba",
-    [new, empty, with_dict, load_dict, suggest_freq, add_word, cut, cut_all, cut_for_search],
+    [new, empty, with_dict, load_dict, suggest_freq, add_word, cut, cut_all,
+     cut_for_search, tokenize, tag],
     load = on_load);

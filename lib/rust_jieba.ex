@@ -1,3 +1,19 @@
+defmodule RustJieba.Keyword do
+  defstruct keyword: "",
+            weight: 0.0
+end
+
+defmodule RustJieba.Tag do
+  defstruct word: "",
+            tag: ""
+end
+
+defmodule RustJieba.Token do
+  defstruct word: "",
+            start: 0,
+            end: 0
+end
+
 defmodule RustJieba do
   @moduledoc """
   Proxy for the [jieba-rs](https://github.com/messense/jieba-rs) project,
@@ -21,6 +37,8 @@ defmodule RustJieba do
   def empty(), do: :erlang.nif_error(:nif_not_loaded)
   def with_dict(_dict_path), do: :erlang.nif_error(:nif_not_loaded)
 
+  #TODO: add clone()
+
   def load_dict(_jieba, _dict_path), do: :erlang.nif_error(:nif_not_loaded)
   def suggest_freq(_jieba, _segment), do: :erlang.nif_error(:nif_not_loaded)
   def add_word(_jieba, _word, _freq, _tag), do: :erlang.nif_error(:nif_not_loaded)
@@ -29,6 +47,7 @@ defmodule RustJieba do
   def cut_all(_jieba, _sentence), do: :erlang.nif_error(:nif_not_loaded)
   def cut_for_search(_jieba, _sentence, _hmm), do: :erlang.nif_error(:nif_not_loaded)
 
-  # TODO: tokenize and tag functions.
+  def tokenize(_jieba, _sentence, _mode, _hmm), do: :erlang.nif_error(:nif_not_loaded)
+  def tag(_jieba, _sentence, _hmm), do: :erlang.nif_error(:nif_not_loaded)
 end
 
