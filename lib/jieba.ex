@@ -45,6 +45,6 @@ defmodule Jieba do
   Takes `text` and returns an array of the segments.
   """
   def cut(jieba, text) do
-    RustJieba.cut(jieba.rust_jieba, text)
+    RustJieba.cut(jieba.rust_jieba, text, :true)
   end
 end

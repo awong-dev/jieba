@@ -19,7 +19,16 @@ defmodule RustJieba do
   """
   def new(), do: :erlang.nif_error(:nif_not_loaded)
   def empty(), do: :erlang.nif_error(:nif_not_loaded)
-  def cut(_jieba, _text), do: :erlang.nif_error(:nif_not_loaded)
+  def with_dict(_dict_path), do: :erlang.nif_error(:nif_not_loaded)
+
   def load_dict(_jieba, _dict_path), do: :erlang.nif_error(:nif_not_loaded)
+  def suggest_freq(_jieba, _segment), do: :erlang.nif_error(:nif_not_loaded)
+  def add_word(_jieba, _word, _freq, _tag), do: :erlang.nif_error(:nif_not_loaded)
+
+  def cut(_jieba, _sentence, _hmm), do: :erlang.nif_error(:nif_not_loaded)
+  def cut_all(_jieba, _sentence), do: :erlang.nif_error(:nif_not_loaded)
+  def cut_for_search(_jieba, _sentence, _hmm), do: :erlang.nif_error(:nif_not_loaded)
+
+  # TODO: tokenize and tag functions.
 end
 

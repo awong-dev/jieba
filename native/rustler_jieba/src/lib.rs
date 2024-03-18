@@ -57,6 +57,22 @@ fn empty() -> ResourceArc<JiebaResource> {
 }
 
 #[rustler::nif]
+fn with_dict(dict_path: String) -> ResourceArc<JiebaResource> {
+    match File::open(dict_path) {
+        Ok(f) => {
+            let mut reader = BufReader::new(f);
+            match Jieba::with_dict(&mut reader) {
+                Ok(jieba) => ResourceArc::new(JiebaResource {
+                    jieba: Mutex::new(jieba),
+                }),
+                _ => ResourceArc::new(JiebaResource { jieba: Mutex::new(Jieba::empty()) })
+            }
+        },
+        Err(ref _io_err) => ResourceArc::new(JiebaResource { jieba: Mutex::new(Jieba::empty()) })
+    }
+}
+
+#[rustler::nif]
 fn load_dict(env: Env, resource: ResourceArc<JiebaResource>, dict_path: String) -> Result<Term, RustlerError> {
     match File::open(dict_path) {
         Ok(f) => {
@@ -75,9 +91,36 @@ fn load_dict(env: Env, resource: ResourceArc<JiebaResource>, dict_path: String) 
 }
 
 #[rustler::nif]
-fn cut(resource: ResourceArc<JiebaResource>, text: String) -> Vec<String> {
+fn suggest_freq(resource: ResourceArc<JiebaResource>, segment: String) -> usize {
     let ref jieba= *resource.jieba.lock().unwrap();
-    jieba.cut(&text, true).into_iter().map(|s| s.to_string()).collect()
+    jieba.suggest_freq(&segment)
 }
 
-rustler::init!("Elixir.RustJieba", [new, empty, load_dict, cut], load = on_load);
+#[rustler::nif]
+fn add_word(resource: ResourceArc<JiebaResource>, word: String, freq: Option<usize>, tag: Option<&str>) -> usize {
+    let ref mut jieba= *resource.jieba.lock().unwrap();
+    jieba.add_word(&word, freq, tag)
+}
+
+#[rustler::nif]
+fn cut(resource: ResourceArc<JiebaResource>, sentence: String, hmm: bool) -> Vec<String> {
+    let ref jieba= *resource.jieba.lock().unwrap();
+    jieba.cut(&sentence, hmm).into_iter().map(|s| s.to_string()).collect()
+}
+
+#[rustler::nif]
+fn cut_all(resource: ResourceArc<JiebaResource>, sentence: String) -> Vec<String> {
+    let ref jieba= *resource.jieba.lock().unwrap();
+    jieba.cut_all(&sentence).into_iter().map(|s| s.to_string()).collect()
+}
+
+#[rustler::nif]
+fn cut_for_search(resource: ResourceArc<JiebaResource>, sentence: String, hmm: bool) -> Vec<String> {
+    let ref jieba= *resource.jieba.lock().unwrap();
+    jieba.cut_for_search(&sentence, hmm).into_iter().map(|s| s.to_string()).collect()
+}
+
+rustler::init!(
+    "Elixir.RustJieba",
+    [new, empty, with_dict, load_dict, suggest_freq, add_word, cut, cut_all, cut_for_search],
+    load = on_load);
