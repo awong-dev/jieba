@@ -37,7 +37,7 @@ defmodule RustJieba do
   def empty(), do: :erlang.nif_error(:nif_not_loaded)
   def with_dict(_dict_path), do: :erlang.nif_error(:nif_not_loaded)
 
-  #TODO: add clone()
+  def clone(_jieba), do: :erlang.nif_error(:nif_not_loaded)
 
   def load_dict(_jieba, _dict_path), do: :erlang.nif_error(:nif_not_loaded)
   def suggest_freq(_jieba, _segment), do: :erlang.nif_error(:nif_not_loaded)

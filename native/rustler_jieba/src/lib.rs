@@ -1,5 +1,5 @@
 use jieba_rs::{Jieba, TokenizeMode, Error as JiebaError};
-use rustler::{Atom, Env, Error as RustlerError, NifStruct, ResourceArc, Term};
+use rustler::{Atom, Encoder, Env, Error as RustlerError, NifStruct, ResourceArc, Term};
 use std::fs::File;
 use std::io::BufReader;
 use std::sync::Mutex;
@@ -87,17 +87,23 @@ fn with_dict(dict_path: String) -> ResourceArc<JiebaResource> {
 }
 
 #[rustler::nif]
+fn clone(resource: ResourceArc<JiebaResource>) -> ResourceArc<JiebaResource> {
+    let ref jieba = *resource.jieba.lock().unwrap();
+    ResourceArc::new(JiebaResource { jieba: Mutex::new(jieba.clone()) })
+}
+
+#[rustler::nif]
 fn load_dict(env: Env, resource: ResourceArc<JiebaResource>, dict_path: String) -> Result<Term, RustlerError> {
     match File::open(dict_path) {
         Ok(f) => {
             let jieba = &mut *resource.jieba.lock().unwrap();
             let mut reader = BufReader::new(f);
             match jieba.load_dict(&mut reader) {
-                Ok(()) => Ok(atoms::ok().to_term(env)),
-                    Err(jieba_err) => match jieba_err {
-                        JiebaError::Io(ref io_err) => Err(RustlerError::Term(Box::new(io_error_to_term(io_err)))),
-                        JiebaError::InvalidDictEntry(entry) => Err(RustlerError::Term(Box::new(entry)))
-                    }
+                Ok(()) => Ok(resource.encode(env)),
+                Err(jieba_err) => match jieba_err {
+                    JiebaError::Io(ref io_err) => Err(RustlerError::Term(Box::new(io_error_to_term(io_err)))),
+                    JiebaError::InvalidDictEntry(entry) => Err(RustlerError::Term(Box::new(entry)))
+                }
             }
         },
             Err(ref io_err) => Err(RustlerError::Term(Box::new(io_error_to_term(io_err))))
@@ -156,6 +162,6 @@ fn tag(resource: ResourceArc<JiebaResource>, sentence: String, hmm: bool) -> Vec
 
 rustler::init!(
     "Elixir.RustJieba",
-    [new, empty, with_dict, load_dict, suggest_freq, add_word, cut, cut_all,
+    [new, empty, with_dict, clone, load_dict, suggest_freq, add_word, cut, cut_all,
      cut_for_search, tokenize, tag],
     load = on_load);
