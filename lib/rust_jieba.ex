@@ -31,23 +31,70 @@ defmodule RustJieba do
     crate: :rustler_jieba # must match the name of the crate in `native/jieba/Cargo.toml`
 
   @doc """
-  Creates an initializes new Jieba instance.
+  Creates an initializes new RustJieba instance with default dictionary.
+
+  Returns RustJieba instance.
+
+  ## Examples
+
+      iex> RustJieba.new()
   """
   def new(), do: :erlang.nif_error(:nif_not_loaded)
+
+  @doc """
+  Creates an initializes new RustJieba instance with an empty dictionary.
+
+  Returns RustJieba instance.
+
+  ## Examples
+
+      iex> RustJieba.empty()
+  """
   def empty(), do: :erlang.nif_error(:nif_not_loaded)
+
+  @doc """
+  Creates an initializes new RustJieba instance with the dictionary given in `_dict_path`.
+
+  Returns RustJieba instance.
+
+  ## Examples
+
+      iex> RustJieba.with_dict("example_userdict.txt")
+  """
   def with_dict(_dict_path), do: :erlang.nif_error(:nif_not_loaded)
 
-  def clone(_jieba), do: :erlang.nif_error(:nif_not_loaded)
+  @doc """
+  Makes another RustJieba with the same dictionary state.
 
-  def load_dict(_jieba, _dict_path), do: :erlang.nif_error(:nif_not_loaded)
-  def suggest_freq(_jieba, _segment), do: :erlang.nif_error(:nif_not_loaded)
-  def add_word(_jieba, _word, _freq, _tag), do: :erlang.nif_error(:nif_not_loaded)
+  Returns RustJieba instance.
 
-  def cut(_jieba, _sentence, _hmm), do: :erlang.nif_error(:nif_not_loaded)
-  def cut_all(_jieba, _sentence), do: :erlang.nif_error(:nif_not_loaded)
-  def cut_for_search(_jieba, _sentence, _hmm), do: :erlang.nif_error(:nif_not_loaded)
+  ## Examples
 
-  def tokenize(_jieba, _sentence, _mode, _hmm), do: :erlang.nif_error(:nif_not_loaded)
-  def tag(_jieba, _sentence, _hmm), do: :erlang.nif_error(:nif_not_loaded)
+      iex> j = RustJieba.new()
+      iex> RustJieba.clone(j)
+  """
+  def clone(_rust_jieba), do: :erlang.nif_error(:nif_not_loaded)
+
+  @doc """
+  Merges the keywords in `_dict_path` to the current RustJieba instance.
+
+  Returns `(:ok, rust_jieba)`
+
+  ## Examples
+
+      iex> j = RustJieba.new()
+      iex> x = RustJieba.load_dict(j, "example_userdict.txt")
+      iex> x == j
+      true
+  """
+  def load_dict(_rust_jieba, _dict_path), do: :erlang.nif_error(:nif_not_loaded)
+  def suggest_freq(_rust_jieba, _segment), do: :erlang.nif_error(:nif_not_loaded)
+  def add_word(_rust_jieba, _word, _freq, _tag), do: :erlang.nif_error(:nif_not_loaded)
+
+  def cut(_rust_jieba, _sentence, _hmm), do: :erlang.nif_error(:nif_not_loaded)
+  def cut_all(_rust_jieba, _sentence), do: :erlang.nif_error(:nif_not_loaded)
+  def cut_for_search(_rust_jieba, _sentence, _hmm), do: :erlang.nif_error(:nif_not_loaded)
+
+  def tokenize(_rust_jieba, _sentence, _mode, _hmm), do: :erlang.nif_error(:nif_not_loaded)
+  def tag(_rust_jieba, _sentence, _hmm), do: :erlang.nif_error(:nif_not_loaded)
 end
-

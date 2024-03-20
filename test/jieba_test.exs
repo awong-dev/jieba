@@ -1,6 +1,7 @@
 defmodule JiebaTest do
   use ExUnit.Case
   doctest Jieba
+  doctest RustJieba
 
   test "cut with default dict" do
     j = Jieba.new()
