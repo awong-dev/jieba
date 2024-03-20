@@ -91,6 +91,18 @@ defmodule RustJieba do
   def suggest_freq(_rust_jieba, _segment), do: :erlang.nif_error(:nif_not_loaded)
   def add_word(_rust_jieba, _word, _freq, _tag), do: :erlang.nif_error(:nif_not_loaded)
 
+  @doc """
+  Takes a sentence and breaks it into a vector of segments.
+
+  Returns ["李小福", "是"]
+
+  ## Examples
+
+      iex> j = RustJieba.new()
+      iex> RustJieba.cut(j, "李小福是创新办任也是云计算方面的家", true)
+      ["李小福", "是", "创新", "办任", "也", "是", "云", "计算",
+       "方面", "的", "家"]
+  """
   def cut(_rust_jieba, _sentence, _hmm), do: :erlang.nif_error(:nif_not_loaded)
   def cut_all(_rust_jieba, _sentence), do: :erlang.nif_error(:nif_not_loaded)
   def cut_for_search(_rust_jieba, _sentence, _hmm), do: :erlang.nif_error(:nif_not_loaded)
