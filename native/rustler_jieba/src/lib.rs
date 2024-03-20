@@ -71,18 +71,23 @@ fn empty() -> ResourceArc<JiebaResource> {
 }
 
 #[rustler::nif]
-fn with_dict(dict_path: String) -> ResourceArc<JiebaResource> {
-    match File::open(dict_path) {
-        Ok(f) => {
-            let mut reader = BufReader::new(f);
-            match Jieba::with_dict(&mut reader) {
-                Ok(jieba) => ResourceArc::new(JiebaResource {
-                    jieba: Mutex::new(jieba),
-                }),
-                _ => ResourceArc::new(JiebaResource { jieba: Mutex::new(Jieba::empty()) })
-            }
-        },
-        Err(ref _io_err) => ResourceArc::new(JiebaResource { jieba: Mutex::new(Jieba::empty()) })
+fn with_dict(dict_path: String) -> Result<ResourceArc<JiebaResource>, RustlerError> {
+    let dict = File::open(dict_path);
+    if dict.is_ok() {
+      let mut reader = BufReader::new(dict.unwrap());
+      let result = Jieba::with_dict(&mut reader);
+      if result.is_ok() {
+          return Ok(ResourceArc::new(JiebaResource {
+                    jieba: Mutex::new(result.unwrap()),
+                }));
+      } else {
+          return match result.unwrap_err() {
+              jieba_rs::Error::Io(ref io_err) => Err(RustlerError::Term(Box::new(io_error_to_term(io_err)))),
+              jieba_rs::Error::InvalidDictEntry(entry) => Err(RustlerError::Term(Box::new(entry))),
+          }
+      }
+    } else {
+        return Err(RustlerError::Term(Box::new(io_error_to_term(&dict.unwrap_err()))))
     }
 }
 
