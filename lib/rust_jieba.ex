@@ -37,7 +37,7 @@ defmodule RustJieba do
 
   ## Examples
 
-      iex> RustJieba.new()
+      iex> _jieba = RustJieba.new()
   """
   def new(), do: :erlang.nif_error(:nif_not_loaded)
 
@@ -48,7 +48,7 @@ defmodule RustJieba do
 
   ## Examples
 
-      iex> RustJieba.empty()
+      iex> _jieba = RustJieba.empty()
   """
   def empty(), do: :erlang.nif_error(:nif_not_loaded)
 
@@ -59,7 +59,7 @@ defmodule RustJieba do
 
   ## Examples
 
-      iex> RustJieba.with_dict("example_userdict.txt")
+      iex> _jieba = RustJieba.with_dict("example_userdict.txt")
   """
   def with_dict(_dict_path), do: :erlang.nif_error(:nif_not_loaded)
 
@@ -70,8 +70,8 @@ defmodule RustJieba do
 
   ## Examples
 
-      iex> j = RustJieba.new()
-      iex> RustJieba.clone(j)
+      iex> jieba = RustJieba.new()
+      iex> RustJieba.clone(jieba)
   """
   def clone(_rust_jieba), do: :erlang.nif_error(:nif_not_loaded)
 
@@ -82,9 +82,9 @@ defmodule RustJieba do
 
   ## Examples
 
-      iex> j = RustJieba.new()
-      iex> x = RustJieba.load_dict(j, "example_userdict.txt")
-      iex> x == j
+      iex> jieba = RustJieba.new()
+      iex> x = RustJieba.load_dict(jieba, "example_userdict.txt")
+      iex> x == jieba
       true
   """
   def load_dict(_rust_jieba, _dict_path), do: :erlang.nif_error(:nif_not_loaded)
@@ -97,14 +97,14 @@ defmodule RustJieba do
 
   ## Examples
 
-      iex> j = RustJieba.new()
-      iex> RustJieba.suggest_freq(j, "也")
+      iex> jieba = RustJieba.new()
+      iex> RustJieba.suggest_freq(jieba, "也")
       307852
-      iex> RustJieba.suggest_freq(j, "是")
+      iex> RustJieba.suggest_freq(jieba, "是")
       796991
-      iex> RustJieba.suggest_freq(j, "也是")
+      iex> RustJieba.suggest_freq(jieba, "也是")
       4083
-      iex> RustJieba.suggest_freq(j, "佢哋")
+      iex> RustJieba.suggest_freq(jieba, "佢哋")
       1
   """
   def suggest_freq(_rust_jieba, _segment), do: :erlang.nif_error(:nif_not_loaded)
@@ -119,12 +119,12 @@ defmodule RustJieba do
 
   ## Examples
 
-      iex> j = RustJieba.new()
-      iex> RustJieba.cut(j, "「台中」正确应该不会被切开", true)
+      iex> jieba = RustJieba.new()
+      iex> RustJieba.cut(jieba, "「台中」正确应该不会被切开", true)
       ["「", "台", "中", "」", "正确", "应该", "不会", "被", "切开"]
-      iex> RustJieba.add_word(j, "台中", nil, nil)
+      iex> RustJieba.add_word(jieba, "台中", nil, nil)
       69
-      iex> RustJieba.cut(j, "「台中」正确应该不会被切开", true)
+      iex> RustJieba.cut(jieba, "「台中」正确应该不会被切开", true)
       ["「", "台中", "」", "正确", "应该", "不会", "被", "切开"]
   """
   def add_word(_rust_jieba, _word, _freq, _tag), do: :erlang.nif_error(:nif_not_loaded)
@@ -136,8 +136,8 @@ defmodule RustJieba do
 
   ## Examples
 
-      iex> j = RustJieba.new()
-      iex> RustJieba.cut(j, "李小福是创新办任也是云计算方面的家", true)
+      iex> jieba = RustJieba.new()
+      iex> RustJieba.cut(jieba, "李小福是创新办任也是云计算方面的家", true)
       ["李小福", "是", "创新", "办任", "也", "是", "云", "计算",
        "方面", "的", "家"]
   """
@@ -157,8 +157,8 @@ defmodule RustJieba do
 
   ## Examples
 
-      iex> j = RustJieba.new()
-      iex> RustJieba.cut_all(j, "李小福是创新办任也是云计算方面的家")
+      iex> jieba = RustJieba.new()
+      iex> RustJieba.cut_all(jieba, "李小福是创新办任也是云计算方面的家")
       ["李", "小", "福", "是", "创", "创新", "新", "办", "任", "也", "是", "云", "计", "计算", "算", "方", "方面", "面", "的", "家"]
   """
   def cut_all(_rust_jieba, _sentence), do: :erlang.nif_error(:nif_not_loaded)
@@ -175,10 +175,10 @@ defmodule RustJieba do
 
   ## Examples
 
-      iex> j = RustJieba.new()
-      iex> RustJieba.cut(j, "小明硕士毕业于中国科学院计算所，后在日本京都大学深造", true)
+      iex> jieba = RustJieba.new()
+      iex> RustJieba.cut(jieba, "小明硕士毕业于中国科学院计算所，后在日本京都大学深造", true)
       ["小明", "硕士", "毕业", "于", "中国科学院", "计算所", "，", "后", "在", "日本京都大学", "深造"]
-      iex> RustJieba.cut_for_search(j, "小明硕士毕业于中国科学院计算所，后在日本京都大学深造", true)
+      iex> RustJieba.cut_for_search(jieba, "小明硕士毕业于中国科学院计算所，后在日本京都大学深造", true)
       ["小明", "硕士", "毕业", "于", "中国", "科学", "学院", "科学院", "中国科学院", "计算",
        "计算所", "，", "后", "在", "日本", "京都", "大学", "日本京都大学", "深造"]
   """
