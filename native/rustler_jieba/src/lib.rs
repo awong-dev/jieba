@@ -1,5 +1,5 @@
 use jieba_rs::{Jieba, TokenizeMode, Error as JiebaError};
-use rustler::{Encoder, Env, Error as RustlerError, NifStruct, ResourceArc, Term};
+use rustler::{Encoder, Env, Error as RustlerError, NifStruct, NifUnitEnum, ResourceArc, Term};
 use std::fs::File;
 use std::io::BufReader;
 use std::sync::Mutex;
@@ -20,6 +20,12 @@ mod atoms {
 
         io_unknown // Other error
     }
+}
+
+#[derive(NifUnitEnum)]
+enum TokenizeEnum {
+   Default,
+   Search,
 }
 
 pub struct JiebaResource {
@@ -132,10 +138,13 @@ fn cut_for_search(resource: ResourceArc<JiebaResource>, sentence: String, hmm: b
 }
 
 #[rustler::nif]
-fn tokenize(resource: ResourceArc<JiebaResource>, sentence: String, mode: String, hmm: bool) -> Vec<JiebaToken> {
+fn tokenize(resource: ResourceArc<JiebaResource>, sentence: String, mode: TokenizeEnum, hmm: bool) -> Vec<JiebaToken> {
     resource.jieba.lock().unwrap()
         .tokenize(&sentence,
-                   if mode == "search" { TokenizeMode::Search } else { TokenizeMode::Default },
+                   match mode {
+                     TokenizeEnum::Default => TokenizeMode::Default,
+                     TokenizeEnum::Search => TokenizeMode::Search
+                   },
                    hmm)
         .into_iter()
         .map(|t| JiebaToken{ word: t.word.to_string(), start: t.start } )

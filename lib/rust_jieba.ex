@@ -184,6 +184,64 @@ defmodule RustJieba do
   """
   def cut_for_search(_rust_jieba, _sentence, _hmm), do: :erlang.nif_error(:nif_not_loaded)
 
+  @doc """
+  Takes a sentence, performs `cut()`, and then produces a vector of `Token` structs that
+  indicate where in the sentence the segment comes from.
+
+  The tokenization mode can be one of :default or :search.
+
+  Returns `[
+              %{start: 0, __struct__: RustJieba.Token, word: "李小福"},
+              %{start: 3, __struct__: RustJieba.Token, word: "是"},["是"]`
+           ]`
+
+  ## Examples
+
+      iex> jieba = RustJieba.new()
+      iex> RustJieba.tokenize(jieba, "李小福是创新办任也是云计算方面的家", :default, true)
+      [
+          %{start: 0, __struct__: RustJieba.Token, word: "李小福"},
+          %{start: 3, __struct__: RustJieba.Token, word: "是"},
+          %{start: 4, __struct__: RustJieba.Token, word: "创新"},
+          %{start: 6, __struct__: RustJieba.Token, word: "办任"},
+          %{start: 8, __struct__: RustJieba.Token, word: "也"},
+          %{start: 9, __struct__: RustJieba.Token, word: "是"},
+          %{start: 10, __struct__: RustJieba.Token, word: "云"},
+          %{start: 11, __struct__: RustJieba.Token, word: "计算"},
+          %{start: 13, __struct__: RustJieba.Token, word: "方面"},
+          %{start: 15, __struct__: RustJieba.Token, word: "的"},
+          %{start: 16, __struct__: RustJieba.Token, word: "家"}
+      ]
+  """
   def tokenize(_rust_jieba, _sentence, _mode, _hmm), do: :erlang.nif_error(:nif_not_loaded)
+
+  @doc """
+  Takes a sentence, performs `cut()`, and then produces a vector of `Tag` structs that
+  label each segment with a tag -- usually the part of speech.
+
+  Returns `[
+              %RustJieba.Tag{word: "李小福", tag: "x"},
+              %RustJieba.Tag{word: "是", tag: "v"},
+              ...
+           ]`
+
+  ## Examples
+
+      iex> jieba = RustJieba.new()
+      iex> RustJieba.tag(jieba, "李小福是创新办任也是云计算方面的家", true)
+      [
+              %RustJieba.Tag{word: "李小福", tag: "x"},
+              %RustJieba.Tag{word: "是", tag: "v"},
+              %RustJieba.Tag{word: "创新", tag: "v"},
+              %RustJieba.Tag{word: "办任", tag: "x"},
+              %RustJieba.Tag{word: "也", tag: "d"},
+              %RustJieba.Tag{word: "是", tag: "v"},
+              %RustJieba.Tag{word: "云", tag: "ns"},
+              %RustJieba.Tag{word: "计算", tag: "v"},
+              %RustJieba.Tag{word: "方面", tag: "n"},
+              %RustJieba.Tag{word: "的", tag: "uj"},
+              %RustJieba.Tag{word: "家", tag: "q"}
+            ]
+  """
   def tag(_rust_jieba, _sentence, _hmm), do: :erlang.nif_error(:nif_not_loaded)
 end
