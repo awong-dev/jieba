@@ -1,5 +1,5 @@
 use jieba_rs::{Jieba, TokenizeMode, Error as JiebaError};
-use rustler::{Atom, Encoder, Env, Error as RustlerError, NifStruct, ResourceArc, Term};
+use rustler::{Encoder, Env, Error as RustlerError, NifStruct, ResourceArc, Term};
 use std::fs::File;
 use std::io::BufReader;
 use std::sync::Mutex;
@@ -46,13 +46,21 @@ fn on_load(env: Env, _term: Term) -> bool {
 }
 
 // Translates std library errors into Rustler atoms
-fn io_error_to_term(err: &IoError) -> Atom {
-    match err.kind() {
+fn io_error_to_rustler_error(err: IoError) -> RustlerError {
+    let atom = match err.kind() {
         IoErrorKind::NotFound => atoms::enoent(),
         IoErrorKind::PermissionDenied => atoms::eacces(),
         IoErrorKind::BrokenPipe => atoms::epipe(),
         IoErrorKind::AlreadyExists => atoms::eexist(),
         _ => atoms::io_unknown(),
+    };
+    RustlerError::Term(Box::new(atom))
+}
+
+fn jieba_error_to_rustler_error(jieba_err: JiebaError) -> RustlerError {
+    match jieba_err {
+        JiebaError::Io(io_err) => io_error_to_rustler_error(io_err),
+        JiebaError::InvalidDictEntry(entry) => RustlerError::Term(Box::new(entry))
     }
 }
 
@@ -72,83 +80,61 @@ fn empty() -> ResourceArc<JiebaResource> {
 
 #[rustler::nif]
 fn with_dict(dict_path: String) -> Result<ResourceArc<JiebaResource>, RustlerError> {
-    let dict = File::open(dict_path);
-    if dict.is_ok() {
-      let mut reader = BufReader::new(dict.unwrap());
-      let result = Jieba::with_dict(&mut reader);
-      if result.is_ok() {
-          return Ok(ResourceArc::new(JiebaResource {
-                    jieba: Mutex::new(result.unwrap()),
-                }));
-      } else {
-          return match result.unwrap_err() {
-              jieba_rs::Error::Io(ref io_err) => Err(RustlerError::Term(Box::new(io_error_to_term(io_err)))),
-              jieba_rs::Error::InvalidDictEntry(entry) => Err(RustlerError::Term(Box::new(entry))),
-          }
-      }
-    } else {
-        return Err(RustlerError::Term(Box::new(io_error_to_term(&dict.unwrap_err()))))
-    }
+    let file = File::open(dict_path).map_err(io_error_to_rustler_error)?;
+    let mut reader = BufReader::new(file);
+    let jieba_rs = Jieba::with_dict(&mut reader).map_err(jieba_error_to_rustler_error)?;
+    Ok(ResourceArc::new(JiebaResource { jieba: Mutex::new(jieba_rs) }))
 }
 
 #[rustler::nif]
 fn clone(resource: ResourceArc<JiebaResource>) -> ResourceArc<JiebaResource> {
-    let ref jieba = *resource.jieba.lock().unwrap();
+    let jieba = resource.jieba.lock().unwrap();
     ResourceArc::new(JiebaResource { jieba: Mutex::new(jieba.clone()) })
 }
 
 #[rustler::nif]
 fn load_dict(env: Env, resource: ResourceArc<JiebaResource>, dict_path: String) -> Result<Term, RustlerError> {
-    match File::open(dict_path) {
-        Ok(f) => {
-            let jieba = &mut *resource.jieba.lock().unwrap();
-            let mut reader = BufReader::new(f);
-            match jieba.load_dict(&mut reader) {
-                Ok(()) => Ok(resource.encode(env)),
-                Err(jieba_err) => match jieba_err {
-                    JiebaError::Io(ref io_err) => Err(RustlerError::Term(Box::new(io_error_to_term(io_err)))),
-                    JiebaError::InvalidDictEntry(entry) => Err(RustlerError::Term(Box::new(entry)))
-                }
-            }
-        },
-            Err(ref io_err) => Err(RustlerError::Term(Box::new(io_error_to_term(io_err))))
-    }
+    let file = File::open(dict_path).map_err(io_error_to_rustler_error)?;
+    let jieba = &mut resource.jieba.lock().unwrap();
+    let mut reader = BufReader::new(file);
+    jieba.load_dict(&mut reader).map_err(jieba_error_to_rustler_error)?;
+    Ok(resource.encode(env))
 }
 
 #[rustler::nif]
 fn suggest_freq(resource: ResourceArc<JiebaResource>, segment: String) -> usize {
-    let ref jieba= *resource.jieba.lock().unwrap();
-    jieba.suggest_freq(&segment)
+    resource.jieba.lock().unwrap()
+        .suggest_freq(&segment)
 }
 
 #[rustler::nif]
 fn add_word(resource: ResourceArc<JiebaResource>, word: String, freq: Option<usize>, new_tag: Option<&str>) -> usize {
-    let ref mut jieba= *resource.jieba.lock().unwrap();
-    jieba.add_word(&word, freq, new_tag)
+    resource.jieba.lock().unwrap()
+        .add_word(&word, freq, new_tag)
 }
 
 #[rustler::nif]
 fn cut(resource: ResourceArc<JiebaResource>, sentence: String, hmm: bool) -> Vec<String> {
-    let ref jieba= *resource.jieba.lock().unwrap();
-    jieba.cut(&sentence, hmm).into_iter().map(|s| s.to_string()).collect()
+    resource.jieba.lock().unwrap()
+        .cut(&sentence, hmm).into_iter().map(|s| s.to_string()).collect()
 }
 
 #[rustler::nif]
 fn cut_all(resource: ResourceArc<JiebaResource>, sentence: String) -> Vec<String> {
-    let ref jieba= *resource.jieba.lock().unwrap();
-    jieba.cut_all(&sentence).into_iter().map(|s| s.to_string()).collect()
+    resource.jieba.lock().unwrap()
+        .cut_all(&sentence).into_iter().map(|s| s.to_string()).collect()
 }
 
 #[rustler::nif]
 fn cut_for_search(resource: ResourceArc<JiebaResource>, sentence: String, hmm: bool) -> Vec<String> {
-    let ref jieba= *resource.jieba.lock().unwrap();
-    jieba.cut_for_search(&sentence, hmm).into_iter().map(|s| s.to_string()).collect()
+    resource.jieba.lock().unwrap()
+        .cut_for_search(&sentence, hmm).into_iter().map(|s| s.to_string()).collect()
 }
 
 #[rustler::nif]
 fn tokenize(resource: ResourceArc<JiebaResource>, sentence: String, mode: String, hmm: bool) -> Vec<JiebaToken> {
-    let ref jieba= *resource.jieba.lock().unwrap();
-    jieba.tokenize(&sentence,
+    resource.jieba.lock().unwrap()
+        .tokenize(&sentence,
                    if mode == "search" { TokenizeMode::Search } else { TokenizeMode::Default },
                    hmm)
         .into_iter()
@@ -158,8 +144,8 @@ fn tokenize(resource: ResourceArc<JiebaResource>, sentence: String, mode: String
 
 #[rustler::nif]
 fn tag(resource: ResourceArc<JiebaResource>, sentence: String, hmm: bool) -> Vec<JiebaTag> {
-    let ref jieba= *resource.jieba.lock().unwrap();
-    jieba.tag(&sentence, hmm)
+    resource.jieba.lock().unwrap()
+        .tag(&sentence, hmm)
         .into_iter()
         .map(|t| JiebaTag{ word: t.word.to_string(), tag: t.tag.to_string() })
         .collect()
