@@ -94,7 +94,7 @@ defmodule RustJieba do
   @doc """
   Takes a sentence and breaks it into a vector of segments.
 
-  Returns ["李小福", "是"]
+  Returns `["李小福", "是"]`
 
   ## Examples
 
@@ -104,7 +104,46 @@ defmodule RustJieba do
        "方面", "的", "家"]
   """
   def cut(_rust_jieba, _sentence, _hmm), do: :erlang.nif_error(:nif_not_loaded)
+
+  @doc """
+  Takes a sentence and breaks it into a vector containing segemnts using
+  the most aggressive segmentation possible given the input dictionary.
+  It is likely that it will produce an oversegmented results. There may
+  also be multiple tokens returned any sequence of characters. For example,
+  `"创新"` will return `["创", "创新", "新"]`.
+
+  This means that joining all elements of the result vector will not
+  necessarily result in a string with the same meaning as the input.
+
+  Returns `["李", "小", "福", "是", "创", "创新", ...]`
+
+  ## Examples
+
+      iex> j = RustJieba.new()
+      iex> RustJieba.cut_all(j, "李小福是创新办任也是云计算方面的家")
+      ["李", "小", "福", "是", "创", "创新", "新", "办", "任", "也", "是", "云", "计", "计算", "算", "方", "方面", "面", "的", "家"]
+  """
   def cut_all(_rust_jieba, _sentence), do: :erlang.nif_error(:nif_not_loaded)
+
+  @doc """
+  Takes a sentence and breaks it into a vector containing segments tuned for
+  search engine keyword matching.  This tends to produce shorted segments
+  that are more likely to produce a keyword match. For example,
+  `"中国科学院"` will produce `["中国", "科学", "学院", "科学院", "中国科学院"]`
+  whereas with `cut()`, it will just produce `["中国科学院"]`
+  It is possible (and likely) that phrases will be repeated.
+
+  Returns `["中国", "科学", "学院", "科学院", "中国科学院"]`
+
+  ## Examples
+
+      iex> j = RustJieba.new()
+      iex> RustJieba.cut(j, "小明硕士毕业于中国科学院计算所，后在日本京都大学深造", true)
+      ["小明", "硕士", "毕业", "于", "中国科学院", "计算所", "，", "后", "在", "日本京都大学", "深造"]
+      iex> RustJieba.cut_for_search(j, "小明硕士毕业于中国科学院计算所，后在日本京都大学深造", true)
+      ["小明", "硕士", "毕业", "于", "中国", "科学", "学院", "科学院", "中国科学院", "计算",
+       "计算所", "，", "后", "在", "日本", "京都", "大学", "日本京都大学", "深造"]
+  """
   def cut_for_search(_rust_jieba, _sentence, _hmm), do: :erlang.nif_error(:nif_not_loaded)
 
   def tokenize(_rust_jieba, _sentence, _mode, _hmm), do: :erlang.nif_error(:nif_not_loaded)
