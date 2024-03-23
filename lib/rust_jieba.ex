@@ -88,7 +88,45 @@ defmodule RustJieba do
       true
   """
   def load_dict(_rust_jieba, _dict_path), do: :erlang.nif_error(:nif_not_loaded)
+
+  @doc """
+  Given a new segment, this attempts to guess the frequency of the segment.
+  It is used by `add_word()` if no `freq` is given.
+
+  Returns 483 (number with word frequency)
+
+  ## Examples
+
+      iex> j = RustJieba.new()
+      iex> RustJieba.suggest_freq(j, "也")
+      307852
+      iex> RustJieba.suggest_freq(j, "是")
+      796991
+      iex> RustJieba.suggest_freq(j, "也是")
+      4083
+      iex> RustJieba.suggest_freq(j, "佢哋")
+      1
+  """
   def suggest_freq(_rust_jieba, _segment), do: :erlang.nif_error(:nif_not_loaded)
+
+  @doc """
+  Adds a segment to the dictionary with an optional frequency or tag.
+
+  If no frequency is given, `suggest_freq()` is used to guess the frequency.
+  This can be used to prevent oversegmentation.
+
+  Returns 2434 (frequency of the added segment)
+
+  ## Examples
+
+      iex> j = RustJieba.new()
+      iex> RustJieba.cut(j, "「台中」正确应该不会被切开", true)
+      ["「", "台", "中", "」", "正确", "应该", "不会", "被", "切开"]
+      iex> RustJieba.add_word(j, "台中", nil, nil)
+      69
+      iex> RustJieba.cut(j, "「台中」正确应该不会被切开", true)
+      ["「", "台中", "」", "正确", "应该", "不会", "被", "切开"]
+  """
   def add_word(_rust_jieba, _word, _freq, _tag), do: :erlang.nif_error(:nif_not_loaded)
 
   @doc """
