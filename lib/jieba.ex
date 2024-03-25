@@ -94,10 +94,10 @@ defmodule Jieba do
 
     Enum.reduce(
       options[:dict_paths] || [],
-      {:ok, (if use_default, do: native_new(), else: Jieba.empty())},
+      {:ok, (if use_default, do: native_new(), else: native_empty())},
       fn (path, result) ->
         case result do
-          {:ok, jieba} -> Jieba.load_dict(jieba, path)
+          {:ok, jieba} -> load_dict(jieba, path)
           _ -> result
         end
       end)
@@ -127,27 +127,10 @@ defmodule Jieba do
   # implement new/3.
   defp native_new(), do: :erlang.nif_error(:nif_not_loaded)
 
-  @doc """
-  Creates an initializes new Jieba instance with an empty dictionary.
-
-  Returns Jieba instance.
-
-  ## Examples
-
-      iex> _jieba = Jieba.empty()
-  """
-  def empty(), do: :erlang.nif_error(:nif_not_loaded)
-
-  @doc """
-  Creates an initializes new Jieba instance with the dictionary given in `_dict_path`.
-
-  Returns Jieba instance.
-
-  ## Examples
-
-      iex> _jieba = Jieba.with_dict("test/example_userdict.txt")
-  """
-  def with_dict(_dict_path), do: :erlang.nif_error(:nif_not_loaded)
+  # Creates an initializes new Jieba instance with an empty dictionary.
+  #
+  # Returns Jieba instance.
+  defp native_empty(), do: :erlang.nif_error(:nif_not_loaded)
 
   @doc """
   Makes another Jieba with the same dictionary state.
@@ -240,7 +223,16 @@ defmodule Jieba do
   Given a new segment, this attempts to guess the frequency of the segment.
   It is used by `add_word()` if no `freq` is given.
 
-  Returns 483 (number with word frequency)
+  This can be used to examine the frequencies of the existing table which
+  can be helpful for tuning or even scaling datasets for dialects of chinese
+  without as much corpus data.  For example, if you had a small 粵語 dataset,
+  you could look up common characters like 雨，車，窗 that are not likely to
+  have a huge frequency diverenge (as opposed to things like 他 or 地 which
+  while frequent are far more used in some dialects), find the average delta
+  and then scale up the frequencies to match the dictionary you are merging
+  in to.
+
+  Returns 483 (frequency of the word)
 
   ## Examples
 
@@ -469,8 +461,28 @@ defmodule Jieba do
 
   ## Examples
       iex> jieba = Jieba.new!()
-      iex> Jieba.textrank_extract_tags(jieba, "今天纽约的天气真好啊，京华大酒店的张尧经理吃了一只北京烤鸭。后天纽约的天气不好，昨天纽约的天气也不好，北京烤鸭真好吃", 3)
+      iex> {:ok, top_k_tags } = Jieba.textrank_extract_tags(jieba, "今天纽约的天气真好啊，京华大酒店的张尧经理吃了一只北京烤鸭。后天纽约的天气不好，昨天纽约的天气也不好，北京烤鸭真好吃", 3)
+      iex> top_k_tags
       [ %Jieba.Keyword{keyword: "天气", weight: 19307118367.17687}, %Jieba.Keyword{keyword: "纽约", weight: 19179632457.07701}, %Jieba.Keyword{keyword: "不好", weight: 13769629783.10484} ]
   """
   def textrank_extract_tags(_jieba, _sentence, _top_k, _allowed_pos \\ [], _stop_words \\ []), do: :erlang.nif_error(:nif_not_loaded)
+
+  @doc """
+  Uses TextRank algorithm to extract tags.
+
+  Returns list of Jieba.Keyword
+
+  Raises Jieba.JiebaError on error.
+
+  ## Examples
+      iex> jieba = Jieba.new!()
+      iex> Jieba.textrank_extract_tags!(jieba, "今天纽约的天气真好啊，京华大酒店的张尧经理吃了一只北京烤鸭。后天纽约的天气不好，昨天纽约的天气也不好，北京烤鸭真好吃", 3)
+      [ %Jieba.Keyword{keyword: "天气", weight: 19307118367.17687}, %Jieba.Keyword{keyword: "纽约", weight: 19179632457.07701}, %Jieba.Keyword{keyword: "不好", weight: 13769629783.10484} ]
+  """
+  def textrank_extract_tags!(jieba, sentence, top_k, allowed_pos \\ [], stop_words \\ []) do
+    case textrank_extract_tags(jieba, sentence, top_k, allowed_pos, stop_words) do
+      {:ok, tags} -> tags
+      {:error, reason} -> raise Jieba.JiebaError, message: to_string(reason)
+    end
+  end
 end

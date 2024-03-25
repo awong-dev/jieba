@@ -96,7 +96,7 @@ fn native_new() -> ElixirJieba {
 }
 
 #[rustler::nif]
-fn empty() -> ElixirJieba {
+fn native_empty() -> ElixirJieba {
     ElixirJieba {
         use_default: false,
         dict_paths: Vec::new(),
@@ -104,20 +104,6 @@ fn empty() -> ElixirJieba {
             jieba_rs: Mutex::new(Jieba::empty()),
         })
     }
-}
-
-#[rustler::nif]
-fn with_dict(dict_path: String) -> Result<ElixirJieba, RustlerError> {
-    let file = File::open(&dict_path).map_err(io_error_to_rustler_error)?;
-    let mut reader = BufReader::new(file);
-    let jieba_rs = Jieba::with_dict(&mut reader).map_err(jieba_error_to_rustler_error)?;
-    Ok(ElixirJieba {
-        use_default: false,
-        dict_paths: [dict_path].to_vec(),
-        native: ResourceArc::new(JiebaResource {
-            jieba_rs: Mutex::new(jieba_rs),
-        })
-    })
 }
 
 #[rustler::nif]
@@ -227,8 +213,8 @@ fn tfidf_extract_tags<'a>(env: Env<'a>, jieba: ElixirJieba, sentence: String, to
 }
 
 #[rustler::nif]
-fn textrank_extract_tags(jieba: ElixirJieba, sentence: String, top_k: usize,
-        allowed_pos: Vec<String>, stop_words: Vec<String>) -> Vec<JiebaKeyword> {
+fn textrank_extract_tags<'a>(env: Env<'a>, jieba: ElixirJieba, sentence: String, top_k: usize,
+        allowed_pos: Vec<String>, stop_words: Vec<String>) -> Result<Term<'a>, RustlerError> {
 
     let jieba = jieba.native.jieba_rs.lock().unwrap();
     let mut keyword_extractor = TextRank::new_with_jieba(&jieba);
@@ -237,14 +223,17 @@ fn textrank_extract_tags(jieba: ElixirJieba, sentence: String, top_k: usize,
        keyword_extractor.add_stop_word(word);
     }
 
-    keyword_extractor.extract_tags(&sentence, top_k, allowed_pos)
+    let result : Vec<JiebaKeyword> = keyword_extractor.extract_tags(&sentence, top_k, allowed_pos)
         .into_iter()
         .map(|e| JiebaKeyword{ keyword: e.keyword.to_string(), weight: e.weight })
-        .collect()
+        .collect();
+
+    let ok_atom_term = atoms::ok().encode(env);
+    Ok(tuple::make_tuple(env, &[ok_atom_term, result.encode(env)]))
 }
 
 rustler::init!(
     "Elixir.Jieba",
-    [native_new, empty, with_dict, clone, load_dict, suggest_freq, add_word, cut, cut_all,
+    [native_new, native_empty, clone, load_dict, suggest_freq, add_word, cut, cut_all,
      cut_for_search, tokenize, tag, tfidf_extract_tags, textrank_extract_tags],
     load = on_load);
