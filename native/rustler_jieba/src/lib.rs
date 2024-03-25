@@ -1,4 +1,4 @@
-use jieba_rs::{Jieba, Error as JiebaError, KeywordExtract, TFIDF, TokenizeMode};
+use jieba_rs::{Jieba, Error as JiebaError, KeywordExtract, TFIDF, TextRank, TokenizeMode};
 use rustler::{types::tuple, Encoder, Env, Error as RustlerError, NifStruct, NifUnitEnum, ResourceArc, Term};
 use std::fs::File;
 use std::io::BufReader;
@@ -226,8 +226,25 @@ fn tfidf_extract_tags<'a>(env: Env<'a>, jieba: ElixirJieba, sentence: String, to
     Ok(tuple::make_tuple(env, &[ok_atom_term, result.encode(env)]))
 }
 
+#[rustler::nif]
+fn textrank_extract_tags(jieba: ElixirJieba, sentence: String, top_k: usize,
+        allowed_pos: Vec<String>, stop_words: Vec<String>) -> Vec<JiebaKeyword> {
+
+    let jieba = jieba.native.jieba_rs.lock().unwrap();
+    let mut keyword_extractor = TextRank::new_with_jieba(&jieba);
+
+    for word in stop_words.into_iter() {
+       keyword_extractor.add_stop_word(word);
+    }
+
+    keyword_extractor.extract_tags(&sentence, top_k, allowed_pos)
+        .into_iter()
+        .map(|e| JiebaKeyword{ keyword: e.keyword.to_string(), weight: e.weight })
+        .collect()
+}
+
 rustler::init!(
     "Elixir.Jieba",
     [native_new, empty, with_dict, clone, load_dict, suggest_freq, add_word, cut, cut_all,
-     cut_for_search, tokenize, tag, tfidf_extract_tags],
+     cut_for_search, tokenize, tag, tfidf_extract_tags, textrank_extract_tags],
     load = on_load);
