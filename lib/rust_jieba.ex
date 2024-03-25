@@ -83,15 +83,44 @@ defmodule RustJieba do
   def clone(_rust_jieba), do: :erlang.nif_error(:nif_not_loaded)
 
   @doc """
-  Merges the keywords in `_dict_path` to the current RustJieba instance.
+  Merges the keywords in `_dict_path` to the current native Jieba instance
+
+  This is an imperative function and will modify the underlying state of the
+  RustJieba instance.  The function will return a new RustJieba that has the
+  `RustJieba.dict_paths` field updated. However, since both the original
+  input object and the returned object will share a native jieba instance,
+  they will both be altered even if the `dict_paths` field of the original
+  object is left untouched.  The original object should be discarded after
+  use.
 
   Returns `(:ok, rust_jieba)`
 
   ## Examples
 
+      # Show that the original jieba instance and the returned ones are entangled even
+      # if the dict_paths are different.
       iex> jieba = RustJieba.new()
-      iex> x = RustJieba.load_dict(jieba, "example_userdict.txt")
-      iex> x != jieba
+      iex> new_jieba = RustJieba.load_dict(jieba, "example_userdict.txt")
+      iex> jieba.dict_paths
+      []
+      iex> new_jieba.dict_paths
+      ["example_userdict.txt"]
+      iex> new_jieba.native == jieba.native
+      true
+
+      # Show the effect of the entanglement on the cut/3 function.
+      iex> jieba = RustJieba.new()
+      iex> old_cut = RustJieba.cut(jieba, "李小福是创新办任也是云计算方面的家", true)
+      ["李小福", "是", "创新", "办任", "也", "是", "云", "计算",
+       "方面", "的", "家"]
+      iex> new_jieba = RustJieba.load_dict(jieba, "example_userdict.txt")
+      iex> new_cut = RustJieba.cut(new_jieba, "李小福是创新办任也是云计算方面的家", true)
+      ["李小福", "是", "创新办", "任", "也", "是", "云", "计算",
+       "方面", "的", "家"]
+      iex> new_cut == old_cut
+      false
+      iex> old_cut == RustJieba.cut(jieba, "李小福是创新办任也是云计算方面的家", true)
+      false
   """
   def load_dict(_rust_jieba, _dict_path), do: :erlang.nif_error(:nif_not_loaded)
 
