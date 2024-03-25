@@ -33,22 +33,22 @@ pub struct JiebaResource {
 }
 
 #[derive(NifStruct)]
-#[module = "RustJieba"]
-struct RustJieba {
+#[module = "Jieba"]
+struct ElixirJieba {
     pub use_default: bool,
     pub dict_paths: Vec<String>,
     pub native: ResourceArc<JiebaResource>
 }
 
 #[derive(NifStruct)]
-#[module = "RustJieba.Token"]
+#[module = "Jieba.Token"]
 struct JiebaToken {
     pub word: String,
     pub start: usize,
 }
 
 #[derive(NifStruct)]
-#[module = "RustJieba.Tag"]
+#[module = "Jieba.Tag"]
 struct JiebaTag {
     pub word: String,
     pub tag: String,
@@ -79,8 +79,8 @@ fn jieba_error_to_rustler_error(jieba_err: JiebaError) -> RustlerError {
 }
 
 #[rustler::nif]
-fn native_new() -> RustJieba {
-    RustJieba {
+fn native_new() -> ElixirJieba {
+    ElixirJieba {
         use_default: true,
         dict_paths: Vec::new(),
         native: ResourceArc::new(JiebaResource {
@@ -90,8 +90,8 @@ fn native_new() -> RustJieba {
 }
 
 #[rustler::nif]
-fn empty() -> RustJieba {
-    RustJieba {
+fn empty() -> ElixirJieba {
+    ElixirJieba {
         use_default: false,
         dict_paths: Vec::new(),
         native: ResourceArc::new(JiebaResource {
@@ -101,11 +101,11 @@ fn empty() -> RustJieba {
 }
 
 #[rustler::nif]
-fn with_dict(dict_path: String) -> Result<RustJieba, RustlerError> {
+fn with_dict(dict_path: String) -> Result<ElixirJieba, RustlerError> {
     let file = File::open(&dict_path).map_err(io_error_to_rustler_error)?;
     let mut reader = BufReader::new(file);
     let jieba_rs = Jieba::with_dict(&mut reader).map_err(jieba_error_to_rustler_error)?;
-    Ok(RustJieba {
+    Ok(ElixirJieba {
         use_default: false,
         dict_paths: [dict_path].to_vec(),
         native: ResourceArc::new(JiebaResource {
@@ -115,9 +115,9 @@ fn with_dict(dict_path: String) -> Result<RustJieba, RustlerError> {
 }
 
 #[rustler::nif]
-fn clone(jieba: RustJieba) -> RustJieba {
+fn clone(jieba: ElixirJieba) -> ElixirJieba {
     let jieba_rs = jieba.native.jieba_rs.lock().unwrap();
-    RustJieba {
+    ElixirJieba {
         use_default: jieba.use_default,
         dict_paths: jieba.dict_paths.clone(),
         native: ResourceArc::new(JiebaResource {
@@ -127,7 +127,7 @@ fn clone(jieba: RustJieba) -> RustJieba {
 }
 
 #[rustler::nif]
-fn load_dict<'a>(env: Env<'a>, in_jieba: RustJieba, dict_path: String) -> Result<Term<'a>, RustlerError> {
+fn load_dict<'a>(env: Env<'a>, in_jieba: ElixirJieba, dict_path: String) -> Result<Term<'a>, RustlerError> {
     let file = File::open(&dict_path).map_err(io_error_to_rustler_error)?;
     let mut jieba = in_jieba;
     {
@@ -141,37 +141,37 @@ fn load_dict<'a>(env: Env<'a>, in_jieba: RustJieba, dict_path: String) -> Result
 }
 
 #[rustler::nif]
-fn suggest_freq(jieba: RustJieba, segment: String) -> usize {
+fn suggest_freq(jieba: ElixirJieba, segment: String) -> usize {
     jieba.native.jieba_rs.lock().unwrap()
         .suggest_freq(&segment)
 }
 
 #[rustler::nif]
-fn add_word(jieba: RustJieba, word: String, freq: Option<usize>, new_tag: Option<&str>) -> usize {
+fn add_word(jieba: ElixirJieba, word: String, freq: Option<usize>, new_tag: Option<&str>) -> usize {
     jieba.native.jieba_rs.lock().unwrap()
         .add_word(&word, freq, new_tag)
 }
 
 #[rustler::nif]
-fn cut(jieba: RustJieba, sentence: String, hmm: bool) -> Vec<String> {
+fn cut(jieba: ElixirJieba, sentence: String, hmm: bool) -> Vec<String> {
     jieba.native.jieba_rs.lock().unwrap()
         .cut(&sentence, hmm).into_iter().map(|s| s.to_string()).collect()
 }
 
 #[rustler::nif]
-fn cut_all(jieba: RustJieba, sentence: String) -> Vec<String> {
+fn cut_all(jieba: ElixirJieba, sentence: String) -> Vec<String> {
     jieba.native.jieba_rs.lock().unwrap()
         .cut_all(&sentence).into_iter().map(|s| s.to_string()).collect()
 }
 
 #[rustler::nif]
-fn cut_for_search(jieba: RustJieba, sentence: String, hmm: bool) -> Vec<String> {
+fn cut_for_search(jieba: ElixirJieba, sentence: String, hmm: bool) -> Vec<String> {
     jieba.native.jieba_rs.lock().unwrap()
         .cut_for_search(&sentence, hmm).into_iter().map(|s| s.to_string()).collect()
 }
 
 #[rustler::nif]
-fn tokenize(jieba: RustJieba, sentence: String, mode: TokenizeEnum, hmm: bool) -> Vec<JiebaToken> {
+fn tokenize(jieba: ElixirJieba, sentence: String, mode: TokenizeEnum, hmm: bool) -> Vec<JiebaToken> {
     jieba.native.jieba_rs.lock().unwrap()
         .tokenize(&sentence,
                    match mode {
@@ -185,7 +185,7 @@ fn tokenize(jieba: RustJieba, sentence: String, mode: TokenizeEnum, hmm: bool) -
 }
 
 #[rustler::nif]
-fn tag(jieba: RustJieba, sentence: String, hmm: bool) -> Vec<JiebaTag> {
+fn tag(jieba: ElixirJieba, sentence: String, hmm: bool) -> Vec<JiebaTag> {
     jieba.native.jieba_rs.lock().unwrap()
         .tag(&sentence, hmm)
         .into_iter()
@@ -194,7 +194,7 @@ fn tag(jieba: RustJieba, sentence: String, hmm: bool) -> Vec<JiebaTag> {
 }
 
 rustler::init!(
-    "Elixir.RustJieba",
+    "Elixir.Jieba",
     [native_new, empty, with_dict, clone, load_dict, suggest_freq, add_word, cut, cut_all,
      cut_for_search, tokenize, tag],
     load = on_load);
