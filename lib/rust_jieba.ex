@@ -38,15 +38,46 @@ defmodule RustJieba do
       }
 
   @doc """
-  Creates an initializes new RustJieba instance with default dictionary.
+  Creates an initializes new RustJieba instance.
+
+  This is a conveniece wrapper that avoids the need to touch the imperative load_dict/2
+  API allowing for a more functional calling style.
 
   Returns RustJieba instance.
 
   ## Examples
 
-      iex> _jieba = RustJieba.new()
+      iex> jieba = RustJieba.new(use_default: false)
+      iex> RustJieba.cut(jieba, "呢個係乜嘢呀")
+      ["呢", "個", "係", "乜", "嘢", "呀"]
+
+      iex> jieba = RustJieba.new()
+      iex> RustJieba.cut(jieba, "呢個係乜嘢呀")
+      ["呢", "個", "係", "乜嘢", "呀"]
+      iex> RustJieba.cut(jieba, "李小福是创新办任也是云计算方面的家")
+      ["李小福", "是", "创新", "办任", "也", "是", "云", "计算",
+       "方面", "的", "家"]
+
+      iex> jieba = RustJieba.new(dict_paths: ["example_userdict.txt"])
+      iex> RustJieba.cut(jieba, "李小福是创新办任也是云计算方面的家")
+      ["李小福", "是", "创新办", "任", "也", "是", "云", "计算",
+       "方面", "的", "家"]
   """
-  def new(), do: :erlang.nif_error(:nif_not_loaded)
+  def new(options \\ [{:dict_paths, []}, {:use_default, true}]) do
+    use_default = options[:use_default] != false
+    jieba = if use_default, do: native_new(), else: RustJieba.empty()
+
+    for path <- (options[:dict_paths] || []) do
+      RustJieba.load_dict(jieba, path)
+    end
+
+    jieba
+  end
+
+  # Since the new/3 conveniece wrapper plus default options captures all
+  # the functionality this is private. However this is still needed to
+  # implement new/3.
+  defp native_new(), do: :erlang.nif_error(:nif_not_loaded)
 
   @doc """
   Creates an initializes new RustJieba instance with an empty dictionary.
@@ -176,7 +207,7 @@ defmodule RustJieba do
       ["李小福", "是", "创新", "办任", "也", "是", "云", "计算",
        "方面", "的", "家"]
   """
-  def cut(_rust_jieba, _sentence, _hmm), do: :erlang.nif_error(:nif_not_loaded)
+  def cut(_rust_jieba, _sentence, _hmm \\ true), do: :erlang.nif_error(:nif_not_loaded)
 
   @doc """
   Takes a sentence and breaks it into a vector containing segemnts using

@@ -79,7 +79,7 @@ fn jieba_error_to_rustler_error(jieba_err: JiebaError) -> RustlerError {
 }
 
 #[rustler::nif]
-fn new() -> RustJieba {
+fn native_new() -> RustJieba {
     RustJieba {
         use_default: true,
         dict_paths: Vec::new(),
@@ -106,7 +106,7 @@ fn with_dict(dict_path: String) -> Result<RustJieba, RustlerError> {
     let mut reader = BufReader::new(file);
     let jieba_rs = Jieba::with_dict(&mut reader).map_err(jieba_error_to_rustler_error)?;
     Ok(RustJieba {
-        use_default: true,
+        use_default: false,
         dict_paths: [dict_path].to_vec(),
         native: ResourceArc::new(JiebaResource {
             jieba_rs: Mutex::new(jieba_rs),
@@ -194,6 +194,6 @@ fn tag(jieba: RustJieba, sentence: String, hmm: bool) -> Vec<JiebaTag> {
 
 rustler::init!(
     "Elixir.RustJieba",
-    [new, empty, with_dict, clone, load_dict, suggest_freq, add_word, cut, cut_all,
+    [native_new, empty, with_dict, clone, load_dict, suggest_freq, add_word, cut, cut_all,
      cut_for_search, tokenize, tag],
     load = on_load);
