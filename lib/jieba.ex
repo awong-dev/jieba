@@ -400,7 +400,7 @@ defmodule Jieba do
   thi Elixir bridge. the Jieba object is actually dynamically allocated and
   shared with a ResourceARC and a Mutex. To do this more properly would
   require the Jieba-RS project redesign the TFIDF interface so it takes
-  `jieba` on the `extract_keyword()` method and not as in the `new() method.
+  `jieba` on the `extract_keyword()` method and not as in the `new()` method.
 
   Returns { :ok,
             [ %Jieba.Keyword{keyword: "北京烤鸭", weight: 1.3904870323222223},
@@ -467,7 +467,7 @@ defmodule Jieba do
   thi Elixir bridge. the Jieba object is actually dynamically allocated and
   shared with a ResourceARC and a Mutex. To do this more properly would
   require the Jieba-RS project redesign the TextRank interface so it takes
-  `jieba` on the `extract_keyword()` method and not as in the `new() method.
+  `jieba` on the `extract_keyword()` method and not as in the `new()` method.
 
   Returns { :ok,
             [
