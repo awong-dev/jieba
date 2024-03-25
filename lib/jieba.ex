@@ -391,4 +391,37 @@ defmodule Jieba do
             ]
   """
   def tag(_jieba, _sentence, _hmm), do: :erlang.nif_error(:nif_not_loaded)
+
+  @doc """
+  Takes a sentence, and attempts to extract the top_k keywords based on TFIDF
+  ranking.
+
+  This constructs a new TFIDF struct each call. If there is no `tfidf_dict_path`
+  or `_stop_words`, this is lightweight. However, if there is, it will
+  reconstruct the internal datastructure per call.
+
+  We cannot do better yet because the Jieba-RS interface confusingly requires
+  that the TFIDF struct must be bound to a stack-scoped Jieba object. With
+  thi Elixir bridge. the Jieba object is actually dynamically allocated and
+  shared with a ResourceARC and a Mutex. To do this more properly would
+  require the Jieba-RS project redesign the TFIDF interface so it takes
+  `jieba` on the `extract_keyword()` method and not as in the `new() method.
+
+  Returns { :ok,
+            [ %Jieba.Keyword{keyword: "北京烤鸭", weight: 1.3904870323222223},
+              %Jieba.Keyword{keyword: "纽约", weight: 1.121759684755},
+              %Jieba.Keyword{keyword: "天气", weight: 1.0766573240983333}
+            ]
+          }
+
+  ## Examples
+      iex> jieba = Jieba.new!()
+      iex> {:ok, top_k_tags} = Jieba.tfidf_extract_tags(jieba, "今天纽约的天气真好啊，京华大酒店的张尧经理吃了一只北京烤鸭。后天纽约的天气不好，昨天纽约的天气也不好，北京烤鸭真好吃", 3)
+      iex> top_k_tags
+      [%Jieba.Keyword{keyword: "北京烤鸭", weight: 1.3904870323222223}, %Jieba.Keyword{keyword: "纽约", weight: 1.121759684755}, %Jieba.Keyword{keyword: "天气", weight: 1.0766573240983333}]
+
+      iex> jieba = Jieba.new!()
+      iex> {:error, :enoent} = Jieba.tfidf_extract_tags(jieba, "", 3, [], "NotAFile.nope.nope")
+  """
+  def tfidf_extract_tags(_jieba, _sentence, _top_k, _allowed_pos \\ [], _tfidf_dict_path \\ "", _stop_words \\ []), do: :erlang.nif_error(:nif_not_loaded)
 end

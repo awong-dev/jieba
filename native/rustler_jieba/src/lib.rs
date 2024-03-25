@@ -1,16 +1,15 @@
-use jieba_rs::{Jieba, TokenizeMode, Error as JiebaError};
+use jieba_rs::{Jieba, Error as JiebaError, KeywordExtract, TFIDF, TokenizeMode};
 use rustler::{types::tuple, Encoder, Env, Error as RustlerError, NifStruct, NifUnitEnum, ResourceArc, Term};
 use std::fs::File;
 use std::io::BufReader;
-use std::sync::Mutex;
 use std::io::Error as IoError;
 use std::io::ErrorKind as IoErrorKind;
+use std::sync::Mutex;
 
 // Creates an atoms module using the rustler macro
 mod atoms {
     rustler::atoms! {
         ok,
-        invalidentry,
 
         // Posix
         enoent, // File does not exist
@@ -41,10 +40,10 @@ struct ElixirJieba {
 }
 
 #[derive(NifStruct)]
-#[module = "Jieba.Token"]
-struct JiebaToken {
-    pub word: String,
-    pub start: usize,
+#[module = "Jieba.Keyword"]
+struct JiebaKeyword {
+    pub keyword: String,
+    pub weight: f64,
 }
 
 #[derive(NifStruct)]
@@ -52,6 +51,13 @@ struct JiebaToken {
 struct JiebaTag {
     pub word: String,
     pub tag: String,
+}
+
+#[derive(NifStruct)]
+#[module = "Jieba.Token"]
+struct JiebaToken {
+    pub word: String,
+    pub start: usize,
 }
 
 fn on_load(env: Env, _term: Term) -> bool {
@@ -193,8 +199,35 @@ fn tag(jieba: ElixirJieba, sentence: String, hmm: bool) -> Vec<JiebaTag> {
         .collect()
 }
 
+#[rustler::nif]
+fn tfidf_extract_tags<'a>(env: Env<'a>, jieba: ElixirJieba, sentence: String, top_k: usize,
+        allowed_pos: Vec<String>, tfidf_dict_path: String,
+        stop_words: Vec<String>) -> Result<Term<'a>, RustlerError> {
+
+    let jieba = jieba.native.jieba_rs.lock().unwrap();
+    let mut keyword_extractor = TFIDF::new_with_jieba(&jieba);
+
+    if !tfidf_dict_path.is_empty() {
+        let file = File::open(&tfidf_dict_path).map_err(io_error_to_rustler_error)?;
+        let mut reader = BufReader::new(file);
+        keyword_extractor.load_dict(&mut reader).map_err(io_error_to_rustler_error)?;
+    }
+
+    for word in stop_words.into_iter() {
+       keyword_extractor.add_stop_word(word);
+    }
+
+    let result : Vec<JiebaKeyword> = keyword_extractor.extract_tags(&sentence, top_k, allowed_pos)
+        .into_iter()
+        .map(|e| JiebaKeyword{ keyword: e.keyword.to_string(), weight: e.weight })
+        .collect();
+
+    let ok_atom_term = atoms::ok().encode(env);
+    Ok(tuple::make_tuple(env, &[ok_atom_term, result.encode(env)]))
+}
+
 rustler::init!(
     "Elixir.Jieba",
     [native_new, empty, with_dict, clone, load_dict, suggest_freq, add_word, cut, cut_all,
-     cut_for_search, tokenize, tag],
+     cut_for_search, tokenize, tag, tfidf_extract_tags],
     load = on_load);
