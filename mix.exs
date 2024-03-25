@@ -53,7 +53,7 @@ defmodule Jieba.MixProject do
       source_ref: "v#{@version}",
       canonical: "http://hexdocs.pm/jason",
       source_url: @source_url,
-      extras: ["README.md", "CHANGELOG.md", "LICENSE"]
+      extras: ["README.md", "LICENSE"]
     ]
   end
 end
