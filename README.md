@@ -1,5 +1,8 @@
 # Jieba
 
+![Build](https://github.com/awong-dev/jieba/actions/workflows/elixir.yml/badge.svg)
+
+
 A Ruslter bridge to [jieba-rs](https://github.com/messense/jieba-rs), the Rust
 Jieba implementation.
 
