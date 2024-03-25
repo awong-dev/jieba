@@ -20,15 +20,22 @@ defmodule RustJieba do
   a Rust implementation of the Python [Jieba](https://github.com/fxsjy/jieba)
   Chinese Word Segmentation library.
 
-  This module attempts to directly project the Rust API into Elixir with an
-  object-oriented imperative API. 
-
-  Look at the the Jieba module for an API that is more Elixir idiomatic. 
+  This module directly mostly projects the Rust API into Elixir with an
+  object-oriented imperative API.
   """
 
   use Rustler,
     otp_app: :jieba, # must match the name of the project in `mix.exs`
     crate: :rustler_jieba # must match the name of the crate in `native/jieba/Cargo.toml`
+
+  @enforce_keys [:use_default, :dict_paths, :native]
+  defstruct [:use_default, :dict_paths, :native]
+
+  @type t :: %__MODULE__{
+        use_default: boolean(),
+        dict_paths: list(String.t()),
+        native: reference(),
+      }
 
   @doc """
   Creates an initializes new RustJieba instance with default dictionary.
@@ -84,8 +91,7 @@ defmodule RustJieba do
 
       iex> jieba = RustJieba.new()
       iex> x = RustJieba.load_dict(jieba, "example_userdict.txt")
-      iex> x == jieba
-      true
+      iex> x != jieba
   """
   def load_dict(_rust_jieba, _dict_path), do: :erlang.nif_error(:nif_not_loaded)
 

@@ -1,5 +1,5 @@
 use jieba_rs::{Jieba, TokenizeMode, Error as JiebaError};
-use rustler::{Encoder, Env, Error as RustlerError, NifStruct, NifUnitEnum, ResourceArc, Term};
+use rustler::{Env, Error as RustlerError, NifStruct, NifUnitEnum, ResourceArc, Term};
 use std::fs::File;
 use std::io::BufReader;
 use std::sync::Mutex;
@@ -29,7 +29,15 @@ enum TokenizeEnum {
 }
 
 pub struct JiebaResource {
-    jieba: Mutex<Jieba>,
+    jieba_rs: Mutex<Jieba>,
+}
+
+#[derive(NifStruct)]
+#[module = "RustJieba"]
+struct RustJieba {
+    pub use_default: bool,
+    pub dict_paths: Vec<String>,
+    pub native: ResourceArc<JiebaResource>
 }
 
 #[derive(NifStruct)]
@@ -71,75 +79,99 @@ fn jieba_error_to_rustler_error(jieba_err: JiebaError) -> RustlerError {
 }
 
 #[rustler::nif]
-fn new() -> ResourceArc<JiebaResource> {
-    ResourceArc::new(JiebaResource {
-        jieba: Mutex::new(Jieba::new()),
-    })
+fn new() -> RustJieba {
+    RustJieba {
+        use_default: true,
+        dict_paths: Vec::new(),
+        native: ResourceArc::new(JiebaResource {
+            jieba_rs: Mutex::new(Jieba::new()),
+        })
+    }
 }
 
 #[rustler::nif]
-fn empty() -> ResourceArc<JiebaResource> {
-    ResourceArc::new(JiebaResource {
-        jieba: Mutex::new(Jieba::empty()),
-    })
+fn empty() -> RustJieba {
+    RustJieba {
+        use_default: false,
+        dict_paths: Vec::new(),
+        native: ResourceArc::new(JiebaResource {
+            jieba_rs: Mutex::new(Jieba::empty()),
+        })
+    }
 }
 
 #[rustler::nif]
-fn with_dict(dict_path: String) -> Result<ResourceArc<JiebaResource>, RustlerError> {
-    let file = File::open(dict_path).map_err(io_error_to_rustler_error)?;
+fn with_dict(dict_path: String) -> Result<RustJieba, RustlerError> {
+    let file = File::open(&dict_path).map_err(io_error_to_rustler_error)?;
     let mut reader = BufReader::new(file);
     let jieba_rs = Jieba::with_dict(&mut reader).map_err(jieba_error_to_rustler_error)?;
-    Ok(ResourceArc::new(JiebaResource { jieba: Mutex::new(jieba_rs) }))
+    Ok(RustJieba {
+        use_default: true,
+        dict_paths: [dict_path].to_vec(),
+        native: ResourceArc::new(JiebaResource {
+            jieba_rs: Mutex::new(jieba_rs),
+        })
+    })
 }
 
 #[rustler::nif]
-fn clone(resource: ResourceArc<JiebaResource>) -> ResourceArc<JiebaResource> {
-    let jieba = resource.jieba.lock().unwrap();
-    ResourceArc::new(JiebaResource { jieba: Mutex::new(jieba.clone()) })
+fn clone(jieba: RustJieba) -> RustJieba {
+    let jieba_rs = jieba.native.jieba_rs.lock().unwrap();
+    RustJieba {
+        use_default: jieba.use_default,
+        dict_paths: jieba.dict_paths.clone(),
+        native: ResourceArc::new(JiebaResource {
+            jieba_rs: Mutex::new(jieba_rs.clone())
+        })
+    }
 }
 
 #[rustler::nif]
-fn load_dict(env: Env, resource: ResourceArc<JiebaResource>, dict_path: String) -> Result<Term, RustlerError> {
-    let file = File::open(dict_path).map_err(io_error_to_rustler_error)?;
-    let jieba = &mut resource.jieba.lock().unwrap();
-    let mut reader = BufReader::new(file);
-    jieba.load_dict(&mut reader).map_err(jieba_error_to_rustler_error)?;
-    Ok(resource.encode(env))
+fn load_dict(in_jieba: RustJieba, dict_path: String) -> Result<RustJieba, RustlerError> {
+    let file = File::open(&dict_path).map_err(io_error_to_rustler_error)?;
+    let mut jieba = in_jieba;
+    {
+        let jieba_rs = &mut jieba.native.jieba_rs.lock().unwrap();
+        let mut reader = BufReader::new(file);
+        jieba_rs.load_dict(&mut reader).map_err(jieba_error_to_rustler_error)?;
+        jieba.dict_paths.push(dict_path);
+    }
+    Ok(jieba)
 }
 
 #[rustler::nif]
-fn suggest_freq(resource: ResourceArc<JiebaResource>, segment: String) -> usize {
-    resource.jieba.lock().unwrap()
+fn suggest_freq(jieba: RustJieba, segment: String) -> usize {
+    jieba.native.jieba_rs.lock().unwrap()
         .suggest_freq(&segment)
 }
 
 #[rustler::nif]
-fn add_word(resource: ResourceArc<JiebaResource>, word: String, freq: Option<usize>, new_tag: Option<&str>) -> usize {
-    resource.jieba.lock().unwrap()
+fn add_word(jieba: RustJieba, word: String, freq: Option<usize>, new_tag: Option<&str>) -> usize {
+    jieba.native.jieba_rs.lock().unwrap()
         .add_word(&word, freq, new_tag)
 }
 
 #[rustler::nif]
-fn cut(resource: ResourceArc<JiebaResource>, sentence: String, hmm: bool) -> Vec<String> {
-    resource.jieba.lock().unwrap()
+fn cut(jieba: RustJieba, sentence: String, hmm: bool) -> Vec<String> {
+    jieba.native.jieba_rs.lock().unwrap()
         .cut(&sentence, hmm).into_iter().map(|s| s.to_string()).collect()
 }
 
 #[rustler::nif]
-fn cut_all(resource: ResourceArc<JiebaResource>, sentence: String) -> Vec<String> {
-    resource.jieba.lock().unwrap()
+fn cut_all(jieba: RustJieba, sentence: String) -> Vec<String> {
+    jieba.native.jieba_rs.lock().unwrap()
         .cut_all(&sentence).into_iter().map(|s| s.to_string()).collect()
 }
 
 #[rustler::nif]
-fn cut_for_search(resource: ResourceArc<JiebaResource>, sentence: String, hmm: bool) -> Vec<String> {
-    resource.jieba.lock().unwrap()
+fn cut_for_search(jieba: RustJieba, sentence: String, hmm: bool) -> Vec<String> {
+    jieba.native.jieba_rs.lock().unwrap()
         .cut_for_search(&sentence, hmm).into_iter().map(|s| s.to_string()).collect()
 }
 
 #[rustler::nif]
-fn tokenize(resource: ResourceArc<JiebaResource>, sentence: String, mode: TokenizeEnum, hmm: bool) -> Vec<JiebaToken> {
-    resource.jieba.lock().unwrap()
+fn tokenize(jieba: RustJieba, sentence: String, mode: TokenizeEnum, hmm: bool) -> Vec<JiebaToken> {
+    jieba.native.jieba_rs.lock().unwrap()
         .tokenize(&sentence,
                    match mode {
                      TokenizeEnum::Default => TokenizeMode::Default,
@@ -152,8 +184,8 @@ fn tokenize(resource: ResourceArc<JiebaResource>, sentence: String, mode: Tokeni
 }
 
 #[rustler::nif]
-fn tag(resource: ResourceArc<JiebaResource>, sentence: String, hmm: bool) -> Vec<JiebaTag> {
-    resource.jieba.lock().unwrap()
+fn tag(jieba: RustJieba, sentence: String, hmm: bool) -> Vec<JiebaTag> {
+    jieba.native.jieba_rs.lock().unwrap()
         .tag(&sentence, hmm)
         .into_iter()
         .map(|t| JiebaTag{ word: t.word.to_string(), tag: t.tag.to_string() })
