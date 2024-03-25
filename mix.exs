@@ -2,7 +2,7 @@ defmodule Jieba.MixProject do
   use Mix.Project
 
   @source_url "https://github.com/awong-dev/jieba"
-  @version "0.1."
+  @version "0.1.0"
 
   def project do
     [
@@ -41,7 +41,7 @@ defmodule Jieba.MixProject do
     [
       maintainers: ["Albert J. Wong"],
       licenses: ["MIT"],
-      links: %{"GitHub" => @source_url}
+      links: %{"GitHub" => @source_url},
     ]
   end
 
