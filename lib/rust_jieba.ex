@@ -1,3 +1,7 @@
+defmodule RustJieba.JiebaError do
+  defexception [:message]
+end
+
 defmodule RustJieba.Keyword do
   @moduledoc """
   Corresponds to a Keyword in the jieba-rs API.
@@ -63,35 +67,59 @@ defmodule RustJieba do
   This is a conveniece wrapper that avoids the need to touch the imperative load_dict/2
   API allowing for a more functional calling style.
 
-  Returns RustJieba instance.
+  Returns {:ok, jieba} or {:error, reason}
 
   ## Examples
 
-      iex> jieba = RustJieba.new(use_default: false)
+      iex> {:ok, jieba} = RustJieba.new(use_default: false)
       iex> RustJieba.cut(jieba, "呢個係乜嘢呀")
       ["呢", "個", "係", "乜", "嘢", "呀"]
 
-      iex> jieba = RustJieba.new()
+      iex> {:ok, jieba} = RustJieba.new()
       iex> RustJieba.cut(jieba, "呢個係乜嘢呀")
       ["呢", "個", "係", "乜嘢", "呀"]
       iex> RustJieba.cut(jieba, "李小福是创新办任也是云计算方面的家")
       ["李小福", "是", "创新", "办任", "也", "是", "云", "计算",
        "方面", "的", "家"]
 
-      iex> jieba = RustJieba.new(dict_paths: ["example_userdict.txt"])
+      iex> {:ok, jieba} = RustJieba.new(dict_paths: ["test/example_userdict.txt"])
       iex> RustJieba.cut(jieba, "李小福是创新办任也是云计算方面的家")
       ["李小福", "是", "创新办", "任", "也", "是", "云", "计算",
        "方面", "的", "家"]
+
+      iex> {:error, :enoent} = RustJieba.new(dict_paths: ["NotAFile.nope.nope"])
   """
   def new(options \\ [{:dict_paths, []}, {:use_default, true}]) do
     use_default = options[:use_default] != false
-    jieba = if use_default, do: native_new(), else: RustJieba.empty()
 
-    for path <- (options[:dict_paths] || []) do
-      RustJieba.load_dict(jieba, path)
+    Enum.reduce(
+      options[:dict_paths] || [],
+      {:ok, (if use_default, do: native_new(), else: RustJieba.empty())},
+      fn (path, result) ->
+        case result do
+          {:ok, jieba} -> RustJieba.load_dict(jieba, path)
+          _ -> result
+        end
+      end)
+  end
+
+  @doc """
+  Creates an initializes new RustJieba instance using new/2.
+
+  Returns RustJieba instance.
+
+  Raises RustJieba.JiebaError on error.
+
+  ## Examples
+      iex> jieba = RustJieba.new!(use_default: false)
+      iex> RustJieba.cut(jieba, "呢個係乜嘢呀")
+      ["呢", "個", "係", "乜", "嘢", "呀"]
+  """
+  def new!(options \\ [{:dict_paths, []}, {:use_default, true}]) do
+    case new(options) do
+      {:ok, jieba} -> jieba
+      {:error, reason} -> raise RustJieba.JiebaError, message: to_string(reason)
     end
-
-    jieba
   end
 
   # Since the new/3 conveniece wrapper plus default options captures all
@@ -117,7 +145,7 @@ defmodule RustJieba do
 
   ## Examples
 
-      iex> _jieba = RustJieba.with_dict("example_userdict.txt")
+      iex> _jieba = RustJieba.with_dict("test/example_userdict.txt")
   """
   def with_dict(_dict_path), do: :erlang.nif_error(:nif_not_loaded)
 
@@ -128,13 +156,13 @@ defmodule RustJieba do
 
   ## Examples
 
-      iex> jieba = RustJieba.new()
+      iex> jieba = RustJieba.new!()
       iex> RustJieba.clone(jieba)
   """
   def clone(_rust_jieba), do: :erlang.nif_error(:nif_not_loaded)
 
   @doc """
-  Merges the keywords in `_dict_path` to the current native Jieba instance
+  Merges the entries in `_dict_path` to the current native Jieba instance
 
   This is an imperative function and will modify the underlying state of the
   RustJieba instance.  The function will return a new RustJieba that has the
@@ -153,21 +181,21 @@ defmodule RustJieba do
 
       # Show that the original jieba instance and the returned ones are entangled even
       # if the dict_paths are different.
-      iex> jieba = RustJieba.new()
-      iex> new_jieba = RustJieba.load_dict(jieba, "example_userdict.txt")
+      iex> jieba = RustJieba.new!()
+      iex> {:ok, new_jieba} = RustJieba.load_dict(jieba, "test/example_userdict.txt")
       iex> jieba.dict_paths
       []
       iex> new_jieba.dict_paths
-      ["example_userdict.txt"]
+      ["test/example_userdict.txt"]
       iex> new_jieba.native == jieba.native
       true
 
       # Show the effect of the entanglement on the cut/3 function.
-      iex> jieba = RustJieba.new()
+      iex> jieba = RustJieba.new!()
       iex> old_cut = RustJieba.cut(jieba, "李小福是创新办任也是云计算方面的家", true)
       ["李小福", "是", "创新", "办任", "也", "是", "云", "计算",
        "方面", "的", "家"]
-      iex> new_jieba = RustJieba.load_dict(jieba, "example_userdict.txt")
+      iex> {:ok, new_jieba} = RustJieba.load_dict(jieba, "test/example_userdict.txt")
       iex> new_cut = RustJieba.cut(new_jieba, "李小福是创新办任也是云计算方面的家", true)
       ["李小福", "是", "创新办", "任", "也", "是", "云", "计算",
        "方面", "的", "家"]
@@ -175,8 +203,38 @@ defmodule RustJieba do
       false
       iex> old_cut == RustJieba.cut(jieba, "李小福是创新办任也是云计算方面的家", true)
       false
+
+      # Show error handling
+      iex> jieba = RustJieba.new!()
+      iex> {:error, :enoent} = RustJieba.load_dict(jieba, "NotAFile.nope.nope")
+      iex> {:error, invalid_entry} = RustJieba.load_dict(jieba, "test/malformed_userdict.txt")
+      iex> invalid_entry
+      "line 5 `This is an invalid entry.\\n` frequency is is not a valid integer: invalid digit found in string"
   """
   def load_dict(_rust_jieba, _dict_path), do: :erlang.nif_error(:nif_not_loaded)
+
+  @doc """
+  Merges the entries in `dict_path` to the current native Jieba instance using load_dict/2.
+
+  Please see load_dict/2 for caveats about imperative behvior.
+
+  Returns RustJieba instance with merged dictionary.
+
+  Raises RustJieba.JiebaError on error.
+
+  ## Examples
+      iex> jieba = RustJieba.new!()
+      iex> new_jieba = RustJieba.load_dict!(jieba, "test/example_userdict.txt")
+      iex> RustJieba.cut(new_jieba, "李小福是创新办任也是云计算方面的家", true)
+      ["李小福", "是", "创新办", "任", "也", "是", "云", "计算",
+       "方面", "的", "家"]
+  """
+  def load_dict!(rust_jieba, dict_path) do
+    case load_dict(rust_jieba, dict_path) do
+      {:ok, jieba} -> jieba
+      {:error, reason} -> raise RustJieba.JiebaError, message: to_string(reason)
+    end
+  end
 
   @doc """
   Given a new segment, this attempts to guess the frequency of the segment.
@@ -186,7 +244,7 @@ defmodule RustJieba do
 
   ## Examples
 
-      iex> jieba = RustJieba.new()
+      iex> jieba = RustJieba.new!()
       iex> RustJieba.suggest_freq(jieba, "也")
       307852
       iex> RustJieba.suggest_freq(jieba, "是")
@@ -208,7 +266,7 @@ defmodule RustJieba do
 
   ## Examples
 
-      iex> jieba = RustJieba.new()
+      iex> jieba = RustJieba.new!()
       iex> RustJieba.cut(jieba, "「台中」正确应该不会被切开", true)
       ["「", "台", "中", "」", "正确", "应该", "不会", "被", "切开"]
       iex> RustJieba.add_word(jieba, "台中", nil, nil)
@@ -225,7 +283,7 @@ defmodule RustJieba do
 
   ## Examples
 
-      iex> jieba = RustJieba.new()
+      iex> jieba = RustJieba.new!()
       iex> RustJieba.cut(jieba, "李小福是创新办任也是云计算方面的家", true)
       ["李小福", "是", "创新", "办任", "也", "是", "云", "计算",
        "方面", "的", "家"]
@@ -246,7 +304,7 @@ defmodule RustJieba do
 
   ## Examples
 
-      iex> jieba = RustJieba.new()
+      iex> jieba = RustJieba.new!()
       iex> RustJieba.cut_all(jieba, "李小福是创新办任也是云计算方面的家")
       ["李", "小", "福", "是", "创", "创新", "新", "办", "任", "也", "是", "云", "计", "计算", "算", "方", "方面", "面", "的", "家"]
   """
@@ -264,7 +322,7 @@ defmodule RustJieba do
 
   ## Examples
 
-      iex> jieba = RustJieba.new()
+      iex> jieba = RustJieba.new!()
       iex> RustJieba.cut(jieba, "小明硕士毕业于中国科学院计算所，后在日本京都大学深造", true)
       ["小明", "硕士", "毕业", "于", "中国科学院", "计算所", "，", "后", "在", "日本京都大学", "深造"]
       iex> RustJieba.cut_for_search(jieba, "小明硕士毕业于中国科学院计算所，后在日本京都大学深造", true)
@@ -286,7 +344,7 @@ defmodule RustJieba do
 
   ## Examples
 
-      iex> jieba = RustJieba.new()
+      iex> jieba = RustJieba.new!()
       iex> RustJieba.tokenize(jieba, "李小福是创新办任也是云计算方面的家", :default, true)
       [
           %{start: 0, __struct__: RustJieba.Token, word: "李小福"},
@@ -316,7 +374,7 @@ defmodule RustJieba do
 
   ## Examples
 
-      iex> jieba = RustJieba.new()
+      iex> jieba = RustJieba.new!()
       iex> RustJieba.tag(jieba, "李小福是创新办任也是云计算方面的家", true)
       [
               %RustJieba.Tag{word: "李小福", tag: "x"},

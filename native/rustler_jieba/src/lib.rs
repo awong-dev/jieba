@@ -1,5 +1,5 @@
 use jieba_rs::{Jieba, TokenizeMode, Error as JiebaError};
-use rustler::{Env, Error as RustlerError, NifStruct, NifUnitEnum, ResourceArc, Term};
+use rustler::{types::tuple, Encoder, Env, Error as RustlerError, NifStruct, NifUnitEnum, ResourceArc, Term};
 use std::fs::File;
 use std::io::BufReader;
 use std::sync::Mutex;
@@ -127,7 +127,7 @@ fn clone(jieba: RustJieba) -> RustJieba {
 }
 
 #[rustler::nif]
-fn load_dict(in_jieba: RustJieba, dict_path: String) -> Result<RustJieba, RustlerError> {
+fn load_dict<'a>(env: Env<'a>, in_jieba: RustJieba, dict_path: String) -> Result<Term<'a>, RustlerError> {
     let file = File::open(&dict_path).map_err(io_error_to_rustler_error)?;
     let mut jieba = in_jieba;
     {
@@ -136,7 +136,8 @@ fn load_dict(in_jieba: RustJieba, dict_path: String) -> Result<RustJieba, Rustle
         jieba_rs.load_dict(&mut reader).map_err(jieba_error_to_rustler_error)?;
         jieba.dict_paths.push(dict_path);
     }
-    Ok(jieba)
+    let ok_atom_term = atoms::ok().encode(env);
+    Ok(tuple::make_tuple(env, &[ok_atom_term, jieba.encode(env)]))
 }
 
 #[rustler::nif]
