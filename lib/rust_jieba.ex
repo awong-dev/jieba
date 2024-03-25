@@ -1,14 +1,32 @@
 defmodule RustJieba.Keyword do
+  @moduledoc """
+  Corresponds to a Keyword in the jieba-rs API.
+
+  `keyword` is the keyword produced by the jieba-rs TextRank extractor.
+  `weight` is the score assigned by the TextRank extractor for the keyword.
+  """
   defstruct keyword: "",
             weight: 0.0
 end
 
 defmodule RustJieba.Tag do
+  @moduledoc """
+  Corresponds to a Tag in the jieba-rs API.
+
+  `word` is the string for the token
+  `tag` is a string with the tag for the token. These are often parts of speech tags.
+  """
   defstruct word: "",
             tag: ""
 end
 
 defmodule RustJieba.Token do
+  @moduledoc """
+  Corresponds to a Token in the jieba-rs API.
+
+  `word` is the string for the token
+  `start` and `end` are the locations in the input sentence of `word`.
+  """
   defstruct word: "",
             start: 0,
             end: 0
@@ -16,12 +34,14 @@ end
 
 defmodule RustJieba do
   @moduledoc """
-  Proxy for the [jieba-rs](https://github.com/messense/jieba-rs) project,
+  Wrapper for the [jieba-rs](https://github.com/messense/jieba-rs) project,
   a Rust implementation of the Python [Jieba](https://github.com/fxsjy/jieba)
   Chinese Word Segmentation library.
 
   This module directly mostly projects the Rust API into Elixir with an
-  object-oriented imperative API.
+  object-oriented imperative API with very thin syntactic sugar. Where possible,
+  it attempts to preserve functional behavior but this is not possible always,
+  especially with the `load_dict/2` inteface.
   """
 
   use Rustler,
@@ -123,6 +143,9 @@ defmodule RustJieba do
   they will both be altered even if the `dict_paths` field of the original
   object is left untouched.  The original object should be discarded after
   use.
+
+  If you wish to keep the original Jieba instance, use `clone/1` to make
+  a copy that can be preserved.
 
   Returns `(:ok, rust_jieba)`
 
