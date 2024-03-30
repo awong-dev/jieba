@@ -1,9 +1,10 @@
 # Jieba
 
-![Build](https://github.com/awong-dev/jieba/actions/workflows/elixir.yml/badge.svg)
+![Build](https://github.com/awong-dev/jieba-rs/actions/workflows/elixir.yml/badge.svg)
 
+([Note for versions 0.2.0 and earlier](#0.2.0-and-earlier))
 
-A Ruslter bridge to [jieba-rs](https://github.com/messense/jieba-rs), the Rust
+A Rustler bridge to [jieba-rs](https://github.com/messense/jieba-rs), the Rust
 Jieba implementation.
 
 This provides the ability to use the Jieba-rs segmenter in Elixir for segmenting
@@ -35,7 +36,22 @@ def deps do
 end
 ```
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at <https://hexdocs.pm/jieba>.
+<a name="0.2.0-and-earlier">
+## Versions prior to 0.2.0
+</a>
+Versions prior to 0.2.0 were written by [mjason](https://github.com/mjason)
+([lmj](https://hex.pm/users/lmj) on hex and released from the
+[mjason/jieba_ex](https://github.com/mjason/jieba_ex) source tree. It exposed
+a single `Jieba.cut(sentence)` method will used a single, unsyncrhonized, static
+instance of Jieba on the Rust side loaded with the default dictionary.
+The `cut(sentence)` was hardcoded to have `hmm=false`.
 
+In March 2024, this codebase was written to help with the
+[Visual Fonts](https://visual-fonts.com/) project, not realizing an existing
+codebase was available. This codebase had a more complete exposure of the Rust
+API. After talking with `mjason`, it was decided to switch to this codebase and
+to increment the version number to signify the API break.
+
+The 0.3.z versions still include `Jieba.cut/1` interface, but have it marked
+deprecated. In 1.0.0, this API will be removed in favor of non-global-object
+based API.

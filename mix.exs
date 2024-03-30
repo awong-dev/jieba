@@ -27,7 +27,7 @@ defmodule Jieba.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:rustler, "~> 0.31.0"},
+      {:rustler, "~> 0.31.0",  runtime: false},
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false}
     ]
   end
@@ -41,6 +41,7 @@ defmodule Jieba.MixProject do
   defp package() do
     [
       maintainers: ["Albert J. Wong"],
+      files: ["lib", ".formatter.exs", "mix.exs", "mix.lock", "README.md", "LICENSE*", "native"],
       licenses: ["MIT"],
       links: %{"GitHub" => @source_url},
     ]
@@ -49,7 +50,7 @@ defmodule Jieba.MixProject do
   defp docs() do
     [
       main: "readme",
-      name: "Jieba",
+      name: "Jieba-RS",
       source_ref: "v#{@version}",
       canonical: "http://hexdocs.pm/jason",
       source_url: @source_url,

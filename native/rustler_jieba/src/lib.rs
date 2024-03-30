@@ -1,5 +1,8 @@
+use lazy_static::lazy_static;
+
 use jieba_rs::{Jieba, Error as JiebaError, KeywordExtract, TFIDF, TextRank, TokenizeMode};
 use rustler::{types::tuple, Encoder, Env, Error as RustlerError, NifStruct, NifUnitEnum, ResourceArc, Term};
+
 use std::fs::File;
 use std::io::BufReader;
 use std::io::Error as IoError;
@@ -145,9 +148,18 @@ fn add_word(jieba: ElixirJieba, word: String, freq: Option<usize>, new_tag: Opti
 }
 
 #[rustler::nif]
-fn cut(jieba: ElixirJieba, sentence: String, hmm: bool) -> Vec<String> {
+fn native_cut(jieba: ElixirJieba, sentence: String, hmm: bool) -> Vec<String> {
     jieba.native.jieba_rs.lock().unwrap()
         .cut(&sentence, hmm).into_iter().map(|s| s.to_string()).collect()
+}
+
+lazy_static! {
+    static ref STATIC_JIEBA: Jieba = Jieba::new();
+}
+
+#[rustler::nif]
+fn native_static_cut(sentence: String) -> Vec<String> {
+    STATIC_JIEBA.cut(&sentence, false).into_iter().map(|s| s.to_string()).collect()
 }
 
 #[rustler::nif]
@@ -234,6 +246,7 @@ fn textrank_extract_tags<'a>(env: Env<'a>, jieba: ElixirJieba, sentence: String,
 
 rustler::init!(
     "Elixir.Jieba",
-    [native_new, native_empty, clone, load_dict, suggest_freq, add_word, cut, cut_all,
-     cut_for_search, tokenize, tag, tfidf_extract_tags, textrank_extract_tags],
+    [native_new, native_empty, clone, load_dict, suggest_freq, add_word, native_cut,
+    native_static_cut, cut_all, cut_for_search, tokenize, tag, tfidf_extract_tags,
+    textrank_extract_tags],
     load = on_load);

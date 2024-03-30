@@ -283,7 +283,36 @@ defmodule Jieba do
       ["李小福", "是", "创新", "办任", "也", "是", "云", "计算",
        "方面", "的", "家"]
   """
-  def cut(_jieba, _sentence, _hmm \\ true), do: :erlang.nif_error(:nif_not_loaded)
+  def cut(jieba, sentence, hmm \\ true) do
+    native_cut(jieba, sentence, hmm)
+  end
+  defp native_cut(_jieba, _sentence, _hmm), do: :erlang.nif_error(:nif_not_loaded)
+
+  @doc """
+  Uses Rust-side, process-global, Jieba instance to break a sentence into a
+  vector of segments without hmm disabled.
+
+  This method is not guaranteed to be threadsafe on the rust-side since the
+  Jieba_rs API does specify thread-safety guarantees on multiple calls to cut.
+
+  Also, this API does not allow for loading custom dictionaries and the
+  disabling of hmm often yields over-segmentation.
+
+  Prefer cut/3 instead.
+
+  Returns `["李小福", "是"]`
+
+  ## Examples
+
+      iex> Jieba.cut("李小福是创新办任也是云计算方面的家")
+      ["李", "小", "福", "是", "创新", "办", "任", "也", "是", "云", "计算", "方面", "的", "家"]
+  """
+  @deprecated "Use cut/3 instead"
+  def cut(sentence) do
+    native_static_cut(sentence)
+  end
+  defp native_static_cut(_sentence), do: :erlang.nif_error(:nif_not_loaded)
+
 
   @doc """
   Takes a sentence and breaks it into a vector containing segemnts using
