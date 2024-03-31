@@ -432,6 +432,8 @@ defmodule Jieba do
   require the Jieba-RS project redesign the TFIDF interface so it takes
   `jieba` on the `extract_keyword()` method and not as in the `new()` method.
 
+  See https://github.com/messense/jieba-rs/issues/99 for details.
+
   Returns { :ok,
             [ %Jieba.Keyword{keyword: "北京烤鸭", weight: 1.3904870323222223},
               %Jieba.Keyword{keyword: "纽约", weight: 1.121759684755},
@@ -498,6 +500,8 @@ defmodule Jieba do
   shared with a ResourceARC and a Mutex. To do this more properly would
   require the Jieba-RS project redesign the TextRank interface so it takes
   `jieba` on the `extract_keyword()` method and not as in the `new()` method.
+
+  See https://github.com/messense/jieba-rs/issues/99 for details.
 
   Returns { :ok,
             [
