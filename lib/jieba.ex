@@ -45,7 +45,7 @@ defmodule Jieba do
   This module directly mostly projects the Rust API into Elixir with an
   object-oriented imperative API with very thin syntactic sugar. Where possible,
   it attempts to preserve functional behavior but this is not possible always,
-  especially with the `load_dict/2` inteface.
+  especially with the `load_dict/2` interface.
   """
 
   use Rustler,
@@ -66,7 +66,7 @@ defmodule Jieba do
   @doc """
   Creates an initializes new Jieba instance.
 
-  This is a conveniece wrapper that avoids the need to touch the imperative load_dict/2
+  This is a convenience wrapper that avoids the need to touch the imperative load_dict/2
   API allowing for a more functional calling style.
 
   Returns {:ok, jieba} or {:error, reason}
@@ -125,7 +125,7 @@ defmodule Jieba do
     end
   end
 
-  # Since the new/3 conveniece wrapper plus default options captures all
+  # Since the new/3 convenience wrapper plus default options captures all
   # the functionality this is private. However this is still needed to
   # implement new/3.
   defp native_new(), do: :erlang.nif_error(:nif_not_loaded)
@@ -202,7 +202,7 @@ defmodule Jieba do
   @doc """
   Merges the entries in `dict_path` to the current native Jieba instance using load_dict/2.
 
-  Please see load_dict/2 for caveats about imperative behvior.
+  Please see load_dict/2 for caveats about imperative behavior.
 
   Returns Jieba instance with merged dictionary.
 
@@ -227,10 +227,10 @@ defmodule Jieba do
   It is used by `add_word()` if no `freq` is given.
 
   This can be used to examine the frequencies of the existing table which
-  can be helpful for tuning or even scaling datasets for dialects of chinese
+  can be helpful for tuning or even scaling datasets for dialects of Chinese
   without as much corpus data.  For example, if you had a small 粵語 dataset,
   you could look up common characters like 雨，車，窗 that are not likely to
-  have a huge frequency diverenge (as opposed to things like 他 or 地 which
+  have a huge frequency divergence (as opposed to things like 他 or 地 which
   while frequent are far more used in some dialects), find the average delta
   and then scale up the frequencies to match the dictionary you are merging
   in to.
@@ -255,7 +255,7 @@ defmodule Jieba do
   Adds a segment to the dictionary with an optional frequency or tag.
 
   If no frequency is given, `suggest_freq()` is used to guess the frequency.
-  This can be used to prevent oversegmentation.
+  This can be used to prevent over-segmentation.
 
   Returns 2434 (frequency of the added segment)
 
@@ -286,13 +286,14 @@ defmodule Jieba do
   def cut(jieba, sentence, hmm \\ true) do
     native_cut(jieba, sentence, hmm)
   end
+
   defp native_cut(_jieba, _sentence, _hmm), do: :erlang.nif_error(:nif_not_loaded)
 
   @doc """
   Uses Rust-side, process-global, Jieba instance to break a sentence into a
   vector of segments without hmm disabled.
 
-  This method is not guaranteed to be threadsafe on the rust-side since the
+  This method is not guaranteed to be thread-safe on the rust-side since the
   Jieba_rs API does specify thread-safety guarantees on multiple calls to cut.
 
   Also, this API does not allow for loading custom dictionaries and the
@@ -311,13 +312,13 @@ defmodule Jieba do
   def cut(sentence) do
     native_static_cut(sentence)
   end
+
   defp native_static_cut(_sentence), do: :erlang.nif_error(:nif_not_loaded)
 
-
   @doc """
-  Takes a sentence and breaks it into a vector containing segemnts using
+  Takes a sentence and breaks it into a vector containing segments using
   the most aggressive segmentation possible given the input dictionary.
-  It is likely that it will produce an oversegmented results. There may
+  It is likely that it will produce an over-segmented results. There may
   also be multiple tokens returned any sequence of characters. For example,
   `"创新"` will return `["创", "创新", "新"]`.
 
@@ -426,7 +427,7 @@ defmodule Jieba do
 
   We cannot do better yet because the Jieba-RS interface confusingly requires
   that the TFIDF struct must be bound to a stack-scoped Jieba object. With
-  thi Elixir bridge. the Jieba object is actually dynamically allocated and
+  the Elixir bridge. the Jieba object is actually dynamically allocated and
   shared with a ResourceARC and a Mutex. To do this more properly would
   require the Jieba-RS project redesign the TFIDF interface so it takes
   `jieba` on the `extract_keyword()` method and not as in the `new()` method.
@@ -493,7 +494,7 @@ defmodule Jieba do
 
   We cannot do better yet because the Jieba-RS interface confusingly requires
   that the TextRank struct must be bound to a stack-scoped Jieba object. With
-  thi Elixir bridge. the Jieba object is actually dynamically allocated and
+  the Elixir bridge. the Jieba object is actually dynamically allocated and
   shared with a ResourceARC and a Mutex. To do this more properly would
   require the Jieba-RS project redesign the TextRank interface so it takes
   `jieba` on the `extract_keyword()` method and not as in the `new()` method.

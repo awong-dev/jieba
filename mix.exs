@@ -8,7 +8,7 @@ defmodule Jieba.MixProject do
     [
       app: :jieba,
       version: @version,
-      elixir: "~> 1.10",
+      elixir: "~> 1.7",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       description: description(),
@@ -27,7 +27,7 @@ defmodule Jieba.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:rustler, "~> 0.31.0",  runtime: false},
+      {:rustler, "~> 0.31.0", runtime: false},
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false}
     ]
   end
@@ -40,10 +40,21 @@ defmodule Jieba.MixProject do
 
   defp package() do
     [
+      description: "Rustler wrapper for the jieba_rs Chiense segmenter",
       maintainers: ["Albert J. Wong"],
-      files: ["lib", ".formatter.exs", "mix.exs", "mix.lock", "README.md", "LICENSE*", "native"],
+      exclude_patterns: [~r/.*~$/, ~r/.*\.swp$/, ~r/.*\.swo$/],
+      files: [
+        "lib",
+        ".formatter.exs",
+        "mix.exs",
+        "mix.lock",
+        "README.md",
+        "LICENSE",
+        "CHANGELOG.md",
+        "native"
+      ],
       licenses: ["MIT"],
-      links: %{"GitHub" => @source_url},
+      links: %{"GitHub" => @source_url}
     ]
   end
 
