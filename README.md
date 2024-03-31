@@ -37,9 +37,7 @@ def deps do
 end
 ```
 
-<a name="0.2.0-and-earlier">
-## Versions prior to 0.2.0
-</a>
+## <a name="0.2.0-and-earlier">Versions prior to 0.2.0</a>
 Versions prior to 0.2.0 were written by [mjason](https://github.com/mjason)
 ([lmj](https://hex.pm/users/lmj) on hex and released from the
 [mjason/jieba_ex](https://github.com/mjason/jieba_ex) source tree. It exposed
