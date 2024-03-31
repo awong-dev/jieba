@@ -1,6 +1,7 @@
 # Jieba
 
 ![Build](https://github.com/awong-dev/jieba-rs/actions/workflows/elixir.yml/badge.svg)
+![semver](https://img.shields.io/badge/semver-0.3.0-blue)
 
 ([Note for versions 0.2.0 and earlier](#0.2.0-and-earlier))
 
@@ -31,7 +32,7 @@ by adding `jieba` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:jieba, "~> 0.1.0"}
+    {:jieba, "~> 0.3.0"}
   ]
 end
 ```
