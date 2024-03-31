@@ -1,6 +1,6 @@
 # Jieba
 
-![Build](https://github.com/awong-dev/jieba-rs/actions/workflows/elixir.yml/badge.svg)
+![Build](https://github.com/awong-dev/jieba/actions/workflows/elixir.yml/badge.svg)
 ![semver](https://img.shields.io/badge/semver-0.3.0-blue)
 
 ([Note for versions 0.2.0 and earlier](#0.2.0-and-earlier))
