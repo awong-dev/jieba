@@ -14,7 +14,7 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
-    name: Test on OTP ${{matrix.otp}} / Elixir ${{matrix.elixir}}
+    name: Test on OTP ${{matrix.otp_version}} / Elixir ${{matrix.elixir_version}}
     strategy:
       matrix:
         otp_version: ['26.2.3']
@@ -50,8 +50,8 @@ jobs:
       - name: Set up Elixir
         uses: erlef/setup-beam@v1
         with:
-          otp-version: ${{matrix.otp}}
-          elixir-version: ${{matrix.elixir}}
+          otp-version: ${{matrix.otp_version}}
+          elixir-version: ${{matrix.elixir_version}}
 
       - name: Install dependencies
         run: mix deps.get
