@@ -33,7 +33,7 @@ by adding `jieba` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:jieba, "~> 0.3.0"}
+    {:jieba, "~> 0.3.1"}
   ]
 end
 ```

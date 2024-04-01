@@ -5,12 +5,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Unreleased
-  1. Clean-up CI, Readme, and Docs.
+  Nothing.
+
+## [0.3.1] 2024-03-31
+Clean-up CI, Readme, and Docs. Precompile binaries for common platforms.
+
+### Added
+  1. RustlerPrecompile
 
 ## [0.3.0] 2024-03-30
 
-   1. This release comes from an entirely new codebase: [awong-dev/jieba](https://github.com/awong-dev/jieba).
-   2. Ownership of `hex.pm` package changed from [lmi](https://hex.pm/users/lmj) to [awong.dev](https://hex.pm/users/awong.dev)
+  1. This release comes from an entirely new codebase: [awong-dev/jieba](https://github.com/awong-dev/jieba).
+  2. Ownership of `hex.pm` package changed from [lmi](https://hex.pm/users/lmj) to [awong.dev](https://hex.pm/users/awong.dev)
 
 Implementation of `awong-dev/jieba` was spurred by the
 [Visual Fonts](https://visual-fonts.com/) project and was code-complete with

@@ -3,7 +3,7 @@ defmodule Jieba.MixProject do
 
   @source_url "https://github.com/awong-dev/jieba"
   # Note, release.yml uses a regexp to parse the version from this line.
-  @version "0.3.0"
+  @version "0.3.1"
 
   def project do
     [
