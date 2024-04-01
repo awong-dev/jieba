@@ -14,21 +14,21 @@ defmodule Jieba.MixProject do
       deps: deps(),
       description: description(),
       package: package(),
-      docs: docs()
+      docs: docs(),
     ]
   end
 
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: []
+      extra_applications: [],
     ]
   end
 
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false}
+      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
       {:rustler, "~> 0.31.0", runtime: false},
       {:rustler_precompiled, "~> 0.7.1"},
     ]
@@ -54,10 +54,10 @@ defmodule Jieba.MixProject do
         "lib",
         "mix.exs",
         "mix.lock",
-        "native"
+        "native",
       ],
       licenses: ["MIT"],
-      links: %{"GitHub" => @source_url}
+      links: %{"GitHub" => @source_url},
     ]
   end
 
@@ -68,7 +68,7 @@ defmodule Jieba.MixProject do
       source_ref: "v#{@version}",
       canonical: "http://hexdocs.pm/jieba",
       source_url: @source_url,
-      extras: ["README.md", "LICENSE"]
+      extras: ["README.md", "CHANGELOG.md", "LICENSE"],
     ]
   end
 end
