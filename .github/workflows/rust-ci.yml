@@ -1,5 +1,7 @@
 # Modified from https://github.com/elixir-nx/tokenizers/blob/f560e8fe4a9748291a1d9908247ce6837635d7da/.github/workflows/rust-ci.yml
 
+name: Rust CI (mostly lint)
+
 on:
   push:
     branches:

@@ -14,14 +14,14 @@ defmodule Jieba.MixProject do
       deps: deps(),
       description: description(),
       package: package(),
-      docs: docs(),
+      docs: docs()
     ]
   end
 
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [],
+      extra_applications: []
     ]
   end
 
@@ -30,7 +30,7 @@ defmodule Jieba.MixProject do
     [
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
       {:rustler, "~> 0.31.0", runtime: false},
-      {:rustler_precompiled, "~> 0.7.1"},
+      {:rustler_precompiled, "~> 0.7.1"}
     ]
   end
 
@@ -44,7 +44,13 @@ defmodule Jieba.MixProject do
     [
       description: "Rustler wrapper for the jieba_rs Chiense segmenter",
       maintainers: ["Albert J. Wong"],
-      exclude_patterns: [~r/.*~$/, ~r/.*\.swp$/, ~r/.*\.swo$/],
+      exclude_patterns: [
+        ~r/.*~$/,
+        ~r/.*\.swp$/,
+        ~r/.*\.swo$/,
+        ~r/lib\/jieba\/mix\/.*$/,
+        ~r/native\/rustler_jieba\/target\/.*$/
+      ],
       files: [
         ".formatter.exs",
         "CHANGELOG.md",
@@ -54,10 +60,10 @@ defmodule Jieba.MixProject do
         "lib",
         "mix.exs",
         "mix.lock",
-        "native",
+        "native"
       ],
       licenses: ["MIT"],
-      links: %{"GitHub" => @source_url},
+      links: %{"GitHub" => @source_url}
     ]
   end
 
@@ -68,7 +74,7 @@ defmodule Jieba.MixProject do
       source_ref: "v#{@version}",
       canonical: "http://hexdocs.pm/jieba",
       source_url: @source_url,
-      extras: ["README.md", "CHANGELOG.md", "LICENSE"],
+      extras: ["README.md", "CHANGELOG.md", "LICENSE"]
     ]
   end
 end

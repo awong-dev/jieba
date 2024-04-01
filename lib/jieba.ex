@@ -48,11 +48,20 @@ defmodule Jieba do
   especially with the `load_dict/2` interface.
   """
 
-  use Rustler,
-    # must match the name of the project in `mix.exs`
+  mix_config = Mix.Project.config()
+  version = mix_config[:version]
+  github_url = mix_config[:package][:links]["GitHub"]
+
+  use RustlerPrecompiled,
     otp_app: :jieba,
-    # must match the name of the crate in `native/jieba/Cargo.toml`
-    crate: :rustler_jieba
+    crate: :rustler_jieba,
+    base_url: "#{github_url}/releases/download/v#{version}",
+    targets:
+      Enum.uniq(["aarch64-unknown-linux-musl" | RustlerPrecompiled.Config.default_targets()]),
+    # Jieba-rs is horridly slow in debug. Don't use it.
+    mode: :release,
+    version: version,
+    force_build: System.get_env("JIEBA_FORCE_RUSTLER_BUILD") in ["1", "true"]
 
   @enforce_keys [:use_default, :dict_paths, :native]
   defstruct [:use_default, :dict_paths, :native]

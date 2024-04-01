@@ -54,8 +54,8 @@ jobs:
         uses: philss/rustler-precompiled-action@v1.0.1
         with:
           nif-version: ${{ matrix.nif }}
-          project-dir: "native/ex_tokenizers"
-          project-name: ex_tokenizers
+          project-dir: "native/rustler_jieba"
+          project-name: rustler_jieba
           project-version: ${{ env.PROJECT_VERSION }}
           target: ${{ matrix.job.target }}
           use-cross: ${{ matrix.job.use-cross }}
