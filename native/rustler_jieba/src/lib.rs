@@ -124,11 +124,11 @@ fn clone(jieba: ElixirJieba) -> ElixirJieba {
 }
 
 #[rustler::nif]
-fn load_dict<'a>(
-    env: Env<'a>,
+fn load_dict(
+    env: Env,
     in_jieba: ElixirJieba,
     dict_path: String,
-) -> Result<Term<'a>, RustlerError> {
+) -> Result<Term, RustlerError> {
     let file = File::open(&dict_path).map_err(io_error_to_rustler_error)?;
     let mut jieba = in_jieba;
     {
@@ -255,15 +255,15 @@ fn tag(jieba: ElixirJieba, sentence: String, hmm: bool) -> Vec<JiebaTag> {
 }
 
 #[rustler::nif]
-fn tfidf_extract_tags<'a>(
-    env: Env<'a>,
+fn tfidf_extract_tags(
+    env: Env<'_>,
     jieba: ElixirJieba,
     sentence: String,
     top_k: usize,
     allowed_pos: Vec<String>,
     tfidf_dict_path: String,
     stop_words: Vec<String>,
-) -> Result<Term<'a>, RustlerError> {
+) -> Result<Term<'_>, RustlerError> {
     let jieba = jieba.native.jieba_rs.lock().unwrap();
     let mut keyword_extractor = TFIDF::new_with_jieba(&jieba);
 
@@ -293,14 +293,14 @@ fn tfidf_extract_tags<'a>(
 }
 
 #[rustler::nif]
-fn textrank_extract_tags<'a>(
-    env: Env<'a>,
+fn textrank_extract_tags(
+    env: Env<'_>,
     jieba: ElixirJieba,
     sentence: String,
     top_k: usize,
     allowed_pos: Vec<String>,
     stop_words: Vec<String>,
-) -> Result<Term<'a>, RustlerError> {
+) -> Result<Term<'_>, RustlerError> {
     let jieba = jieba.native.jieba_rs.lock().unwrap();
     let mut keyword_extractor = TextRank::new_with_jieba(&jieba);
 
