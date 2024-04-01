@@ -124,11 +124,7 @@ fn clone(jieba: ElixirJieba) -> ElixirJieba {
 }
 
 #[rustler::nif]
-fn load_dict(
-    env: Env,
-    in_jieba: ElixirJieba,
-    dict_path: String,
-) -> Result<Term, RustlerError> {
+fn load_dict(env: Env, in_jieba: ElixirJieba, dict_path: String) -> Result<Term, RustlerError> {
     let file = File::open(&dict_path).map_err(io_error_to_rustler_error)?;
     let mut jieba = in_jieba;
     {
