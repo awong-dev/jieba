@@ -28,7 +28,9 @@ defmodule Jieba.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+      {:benchee, "~> 1.0", only: :dev},
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
+      {:jason, "~> 1.4"},
       {:rustler, "~> 0.31.0", runtime: false},
       {:rustler_precompiled, "~> 0.7.1"}
     ]

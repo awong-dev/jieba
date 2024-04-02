@@ -23,7 +23,7 @@ def main():
           segments = [ token.word for token in utt.tokens ]
           text = ''.join(segments)
           segmentation_data.append([text,segments])
-    with open('../test/data/hkcancor_segmentation_testdata.json', 'w') as f:
+    with open('./data/hkcancor_segmentation.json', 'w') as f:
         json.dump(segmentation_data, f)
 
 if __name__ == '__main__':
