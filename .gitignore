@@ -29,3 +29,5 @@ jieba-*.tar
 *.sw[op]
 
 /priv
+
+venv
