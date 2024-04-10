@@ -42,7 +42,7 @@ defmodule Jieba.MixProject do
 
   defp package() do
     [
-      description: "Rustler wrapper for the jieba_rs Chiense segmenter",
+      description: "Rustler wrapper for the jieba_rs Chinese segmenter",
       maintainers: ["Albert J. Wong"],
       exclude_patterns: [
         ~r/.*~$/,
