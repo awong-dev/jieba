@@ -21,7 +21,7 @@ Clean-up CI, Readme, and Docs. Precompile binaries for common platforms.
 Implementation of `awong-dev/jieba` was spurred by the
 [Visual Fonts](https://visual-fonts.com/) project and was code-complete with
 `jieba_rs` API exposed in a thread-safe manner (complete with documentation
-and tests) before noticing that there was an exisitng `hex.pm` jieba pakcage.
+and tests) before noticing that there was an existing `hex.pm` jieba package.
 
 After the name collision was discovered, `ljm` and `awong-dev` decided to
 transfer package ownership and release a new version of `jieba` using the
@@ -41,7 +41,7 @@ as a deprecated API for the 0.3.0 release and will be removed later.
   1. `Jieba.cut/1` is being removed because other APIs are more flexible and provide full thread-safety guarantees.
 
 ### Changed
-  1. hex.pm jieba packaged ownership transfered from `ljm` to `awong-dev`
+  1. hex.pm jieba packaged ownership transferred from `ljm` to `awong-dev`
   2. Source tree is now at [awong-dev/jieba](https://github.com/awong-dev/jieba)
   3. Documentation written primarily in English
 
