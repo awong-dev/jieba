@@ -65,6 +65,11 @@ struct JiebaToken {
     pub start: usize,
 }
 
+// rustler 0.31's `resource!` macro emits a non-local `impl` block, which Rust
+// 1.80+ flags via the `non_local_definitions` lint. CI runs clippy with
+// `-Dwarnings`, so we silence it locally. Removable once we upgrade to
+// rustler >= 0.32, which replaces this macro with `env.register::<T>()`.
+#[allow(non_local_definitions)]
 fn on_load(env: Env, _term: Term) -> bool {
     rustler::resource!(JiebaResource, env);
     true
