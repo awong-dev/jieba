@@ -38,6 +38,38 @@ def deps do
 end
 ```
 
+## Development
+
+### CI workflows
+
+Three GitHub Actions workflows live under `.github/workflows/`:
+
+- **`ci.yml`** is the main Elixir gate. It runs on every pull request and on pushes to `main`. It installs Elixir/OTP, pulls deps, checks formatting (`mix format --check-formatted`), verifies there are no unused dependencies (`mix deps.unlock --check-unused`), compiles with `--warnings-as-errors`, and runs the test suite. It sets `JIEBA_FORCE_RUSTLER_BUILD=1` so the NIF is compiled from source rather than downloaded, which means a broken Rust change is caught here even though this job is primarily about Elixir.
+- **`rust-ci.yml`** handles Rust linting — `cargo fmt --check` and `cargo clippy -- -Dwarnings`. It is deliberately scoped: it only runs when files under `native/**` change. A pure-Elixir PR won't trigger it, and edits to the workflow itself won't re-run its own checks.
+- **`release.yml`** builds precompiled NIFs. See the Release process section below.
+
+### Branching
+
+The long-lived branch is `main`; feature and fix work merges there through pull requests.
+
+Release preparation happens on dedicated, short-lived branches rather than directly on `main` — for example, `release_0_3_0` produced the `v0.3.0` tag and `rustler_precompiled` produced `v0.3.1`. This keeps experimental packaging churn (target matrices, precompile glue, CI shuffling) off `main` until it works end-to-end. Once a release is cut, the relevant commits are cherry-picked back onto `main` so the history carries forward. A practical consequence: release tags are *not* direct ancestors of `main`, so `git describe main` will not find them. Use `git log --all --decorate` or check tags explicitly when tracing release history.
+
+### Release process
+
+Releases are published through `release.yml`, which produces the precompiled NIFs that end users pick up via `rustler_precompiled`.
+
+The source of truth for the release version is the `@version` attribute in `mix.exs`. The workflow extracts it with a regex over that exact line, so the two-space indent and double-quoted form must be preserved.
+
+To cut a release:
+
+1. On a release-prep branch, bump `@version` in `mix.exs`, update `CHANGELOG.md`, and update any hardcoded version references (e.g., the badge and `{:jieba, "~> X.Y.Z"}` snippet in this README).
+2. Push a tag matching the version (e.g., `v0.3.2`). Tags trigger `release.yml` unconditionally; pushes to `main` only trigger it when something under `native/**` changes.
+3. `release.yml` then fans out across a matrix of ~10 targets (macOS x86_64/arm64, Linux x86_64/aarch64/arm/riscv64 in gnu and musl variants, and Windows gnu/msvc), using `philss/rustler-precompiled-action` under the hood. Each job uploads its built artifact and — only when the run was triggered by a tag — attaches it to the GitHub Release via `softprops/action-gh-release`.
+4. Once the release is populated with artifacts, publish the package to Hex (`mix hex.publish`). The `RustlerPrecompiled` setup in `lib/jieba.ex` points end users at `https://github.com/awong-dev/jieba/releases/download/v<version>/…`, so users installing from Hex will download the matching precompiled binary from the GitHub Release.
+5. Cherry-pick the release commits back onto `main` and open a PR.
+
+Adding a new precompile target requires edits in two places: the `matrix.job` list in `release.yml`, and the `targets:` list passed to `RustlerPrecompiled` in `lib/jieba.ex`. Miss one and users on that platform either won't get a binary or will fail checksum verification.
+
 ## <a name="0.2.0-and-earlier">Versions prior to 0.2.0</a>
 Versions prior to 0.2.0 were written by [mjason](https://github.com/mjason)
 ([lmj](https://hex.pm/users/lmj) on hex and released from the
