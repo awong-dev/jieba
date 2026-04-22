@@ -23,6 +23,7 @@ jobs:
   lint-rust:
     name: Lint Rust
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     strategy:
       matrix:
         manifest:
