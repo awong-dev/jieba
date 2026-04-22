@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Unreleased
   Nothing.
 
+## [0.3.2] 2026-04-21
+Loosen versioning for `rustler` and `rustler_precompiled` to only
+specify the minor versions instead of the patch versions.
+
+Update CI to newer script versions.
+
 ## [0.3.1] 2024-03-31
 Clean-up CI, Readme, and Docs. Precompile binaries for common platforms.
 
