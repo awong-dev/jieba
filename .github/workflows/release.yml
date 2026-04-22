@@ -29,7 +29,7 @@ jobs:
   build_release:
     name: NIF ${{ matrix.nif }} - ${{ matrix.job.target }} (${{ matrix.job.os }})
     runs-on: ${{ matrix.job.os }}
-    timeout-minutes: 60
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
