@@ -8,10 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Nothing.
 
 ## [0.3.2] 2026-04-21
-Loosen versioning for `rustler` and `rustler_precompiled` to only
-specify the minor versions instead of the patch versions.
+Release hygiene and CI housekeeping. No API changes.
 
-Update CI to newer script versions.
+### Changed
+  1. Loosen `rustler` and `rustler_precompiled` version constraints to minor pins.
+
+### Fixed
+  1. Restore CI on Rust 1.80+ by silencing `non_local_definitions` on the `rustler::resource!` macro (pending a rustler 0.32 upgrade).
+  2. Refresh `release.yml` runners off retired images (`macos-11`, `ubuntu-20.04`, `windows-2019`) to `macos-15-intel`/`macos-14`, `ubuntu-22.04`, and `windows-2022`.
+  3. Correct stale `native/ex_tokenizers/target/` cache path in `rust-ci.yml` (leftover from template).
+
+### Added
+  1. Workflow hardening: explicit `permissions:`, `concurrency:`, and `timeout-minutes` on all three workflows.
+  2. Repo documentation: `CLAUDE.md` and a Development section in `README.md`.
 
 ## [0.3.1] 2024-03-31
 Clean-up CI, Readme, and Docs. Precompile binaries for common platforms.
