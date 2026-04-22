@@ -3,7 +3,7 @@ defmodule Jieba.MixProject do
 
   @source_url "https://github.com/awong-dev/jieba"
   # Note, release.yml uses a regexp to parse the version from this line.
-  @version "0.3.1"
+  @version "0.3.2"
 
   def project do
     [
@@ -29,8 +29,8 @@ defmodule Jieba.MixProject do
   defp deps do
     [
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
-      {:rustler, "~> 0.31.0", runtime: false},
-      {:rustler_precompiled, "~> 0.7.1"}
+      {:rustler, "~> 0.31", runtime: false},
+      {:rustler_precompiled, "~> 0.7"}
     ]
   end
 
