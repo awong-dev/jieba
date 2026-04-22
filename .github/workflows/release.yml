@@ -19,6 +19,12 @@ on:
 permissions:
   contents: write
 
+# Note: cancel-in-progress is deliberately false so a tag push that kicks off
+# a real release is never interrupted by a later push to main.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   build_release:
     name: NIF ${{ matrix.nif }} - ${{ matrix.job.target }} (${{ matrix.job.os }})
