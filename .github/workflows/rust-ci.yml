@@ -12,6 +12,9 @@ on:
     paths:
       - 'native/**'
 
+permissions:
+  contents: read
+
 jobs:
   lint-rust:
     name: Lint Rust
