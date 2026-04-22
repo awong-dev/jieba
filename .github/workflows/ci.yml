@@ -19,7 +19,7 @@ concurrency:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
     name: Test on OTP ${{matrix.otp_version}} / Elixir ${{matrix.elixir_version}}
     strategy:
       matrix:
